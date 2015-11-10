@@ -211,6 +211,7 @@ var aggregateVersions = {};
 var aggregateInc = 0;
 
 var loadAggregates = function(level, aggregates){
+updateTable(level, aggregates);
 	var aggregateLayer = L.geoJson(aggregates, {style:styleAggregates, onEachFeature:labelAggregates});
 	aggregateLayers[level] = aggregateLayer;
 	aggregateLayers[level].version = aggregateInc;
@@ -320,6 +321,8 @@ function labelAggregates(feature, layer) {
       click: highlightAggregate,
 			dblclick: zoomToFeature
 		});
+		
+//		layer.attr('id',feature.properties.pkey);
 }
 
 var activeAggregate = null;
@@ -330,27 +333,51 @@ var activeAggregate = null;
 	@param {object} event - leaflet event object
 */
 function highlightAggregate(e) {
-  var layer = e.target;
-
-  if (activeAggregate !== null) {
-    activeAggregate.setStyle(styleAggregates(activeAggregate.feature));
-    activeAggregate.bringToBack();
-  }
-
-  layer.setStyle({
-    weight: 5,
-    color: '#333',
-    opacity:1,
-    dashArray: '',
-    fillOpacity: 0.7
-  });
-
-  layer.bringToFront(); //buggy?
-
-  info.update(layer.feature.properties);
-
-  activeAggregate = layer;
+	var layer = e.target;
+  
+	_highlightTableRow( layer );  
+	_highlightLayer( layer );
 }
+
+function _highlightLayer(layerElement) {
+console.log("enter _highlightLayer");
+console.log(layerElement);
+	if (activeAggregate !== null) {
+		activeAggregate.setStyle(styleAggregates(activeAggregate.feature));
+		activeAggregate.bringToBack();
+	}
+	
+	layerElement.setStyle({
+		weight: 5,
+		color: '#333',
+		opacity:1,
+		dashArray: '',
+		fillOpacity: 0.7
+	});
+	
+	layerElement.bringToFront(); //buggy?
+	
+	info.update(layerElement.feature.properties);
+	  
+	activeAggregate = layerElement;
+}
+
+function _highlightTableRow(layerElement) {
+	var tlayer = $('#t-'+layerElement.feature.properties.pkey);
+	
+	if (activeAggregate !== null) {
+		var atlayer = $('#t-'+activeAggregate.feature.properties.pkey);
+		atlayer.removeClass('highlighted');
+	}
+	
+	tlayer.addClass('highlighted');
+	
+	var tlayertop = tlayer.offset().top;
+	var t = $("#table");
+	var dtop = t.offset().top;
+	t.scrollTop( t.scrollTop()  + tlayertop - dtop);
+}
+
 /**
 	Reset style of aggregate after hover over
 
@@ -598,6 +625,7 @@ aggregatesControl.onAdd = function(map) {
     reloadAggregates().then(function() {
       updateAggregateVisibility();
 			map.spin(false);
+			updateTable();
     });
   };
 
@@ -843,3 +871,82 @@ map.on('popupopen', function(popup){
 			twttr.widgets.load($('.leaflet-popup-content'));
 		}
 });
+
+function updateTable(level,aggregates) {
+
+	if ( level === 'village' ) {
+		
+		var h = "";
+		
+		$.each( aggregates.features, function( i, e ) {
+			h += "<tr class='village' id='t-" + e.properties.pkey + "'>";
+			h += "<td><a class='village-toggle' data-expanded=''>+</a></td>";
+			h += "<td>" + e.properties.pkey + "</td>";
+			h += "<td>" + e.properties.level_name + "</td>";
+			h += "<td>" + e.properties.count + "</td>";
+			h += "<td>1</td>";
+			h += "<td><a class='flooded-toggle'>Flooded</a></td>";
+			h += "</tr>";
+			
+			h += "<tr class='rw t-" + e.properties.pkey + "' style='display:none;' id='t-" + e.properties.pkey + "'>";
+			h += "<td></td>";
+			h += "<td>123</td>";
+			h += "<td>RW 1</td>";
+			h += "<td>1</td>";
+			h += "<td>2</td>";
+			h += "<td></td>";
+			h += "</tr>";			
+
+			h += "<tr class='rw t-" + e.properties.pkey + "' style='display:none;' id='t-" + e.properties.pkey + "'>";
+			h += "<td></td>";
+			h += "<td>456</td>";
+			h += "<td>RW 2</td>";
+			h += "<td>3</td>";
+			h += "<td>4</td>";
+			h += "<td></td>";
+			h += "</tr>";			
+		});
+		
+		$("#table table tbody").html( h );
+		$("#table tr[id^=t]").on('mouseover', function() {
+			var id = $(this).attr('id');
+			var lid = id.substring(2, id.length);
+			$.each( aggregateLayers[level]._layers, function(i,e) {
+				if (e.feature.properties.pkey===Number(lid)) {
+					_highlightLayer( e );
+				}
+			});
+			$(this).addClass('highlighted');
+		}).on('mouseout', function() {
+			$(this).removeClass('highlighted');
+		});
+		
+		$('.village-toggle').on('click', function() {
+			var toggleButton = $(this);
+			var villageClass = '.' + toggleButton.closest('tr').attr('id');
+			if (toggleButton.data('expanded')) {
+				toggleButton.text('+');
+				$( villageClass ).hide();
+				toggleButton.data('expanded', false);
+			} else {
+				toggleButton.text('-');
+				$( villageClass ).show();
+				toggleButton.data('expanded', true);
+			}
+		});
+		
+		$('.flooded-toggle').on('click', function() {
+			var toggleButton = $(this);
+			var villageClass = '.' + toggleButton.closest('tr').attr('id');
+			if (toggleButton.data('flooded')) {
+				toggleButton.removeClass('flooded');
+				toggleButton.data('flooded', false);
+			} else {
+				toggleButton.addClass('flooded');
+				toggleButton.data('flooded', true);
+			}
+		});
+		
+	}
+	
+}

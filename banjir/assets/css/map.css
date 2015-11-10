@@ -38,8 +38,50 @@ body {
 }
 
 #map {
-  height:100%;
+  height:70%;
   cursor: default;
+}
+
+#table {
+    height: 30%;
+    background-color: #eee;
+    overflow: auto;
+}
+
+#table table .header {
+    background-color: #eee;
+    font-size: 14px;
+}
+
+#table table .village-toggle {
+    cursor: pointer;
+    font-weight: bold;
+    padding-left: 10px;
+}
+
+#table table tr.highlighted {
+    background-color: #f88;
+}
+
+#table table .village {
+    background-color: #fff;
+    font-size: 14px;
+}
+
+#table table .village .flooded-toggle {
+    border: 1px solid #acf;
+    font-size: 12px;
+    padding: 1px 5px;
+    cursor: pointer;
+}
+
+#table table .village .flooded-toggle.flooded {
+    background-color: #cef;
+}
+
+#table table .rw {
+    background-color: #fff;
+    font-size: 12px;
 }
 
 .navbar-right {
