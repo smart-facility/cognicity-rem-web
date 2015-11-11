@@ -211,12 +211,12 @@ var aggregateVersions = {};
 var aggregateInc = 0;
 
 var loadAggregates = function(level, aggregates){
-updateTable(level, aggregates);
 	var aggregateLayer = L.geoJson(aggregates, {style:styleAggregates, onEachFeature:labelAggregates});
 	aggregateLayers[level] = aggregateLayer;
 	aggregateLayers[level].version = aggregateInc;
   aggregateVersions[level] = aggregateInc;
   aggregateInc += 1;
+  updateTable(level, aggregates);
 	return aggregateLayers[level];
 };
 
@@ -275,7 +275,7 @@ var styleInfrastructure = {
 	*/
 function styleAggregates(feature) {
     return {
-        fillColor: getColor(feature.properties.count),
+        fillColor: feature.properties.flooded ? '#00f' : getColor(feature.properties.count),
         weight: 0,
 				//disabled polygon borders for clarity
         //opacity: 1,
@@ -335,18 +335,22 @@ var activeAggregate = null;
 function highlightAggregate(e) {
 	var layer = e.target;
   
-	_highlightTableRow( layer );  
-	_highlightLayer( layer );
+	highlightTableRow( layer );  
+	highlightLayer( layer );
 }
 
-function _highlightLayer(layerElement) {
-console.log("enter _highlightLayer");
-console.log(layerElement);
+/**
+ * Highlight the layer
+ * @param {object} layerElement Leaflet layer object
+ */
+function highlightLayer(layerElement) {
+	// If we've got an already highlighted layer, unhighlight it
 	if (activeAggregate !== null) {
 		activeAggregate.setStyle(styleAggregates(activeAggregate.feature));
 		activeAggregate.bringToBack();
 	}
 	
+	// Highlight the layer
 	layerElement.setStyle({
 		weight: 5,
 		color: '#333',
@@ -357,25 +361,35 @@ console.log(layerElement);
 	
 	layerElement.bringToFront(); //buggy?
 	
+	// Update the tooltip
 	info.update(layerElement.feature.properties);
 	  
+	// Retain which layer is highlighted
 	activeAggregate = layerElement;
 }
 
-function _highlightTableRow(layerElement) {
-	var tlayer = $('#t-'+layerElement.feature.properties.pkey);
+/**
+ * Highlight the table row
+ * @param {object} layerElement Leaflet layer object
+ */
+function highlightTableRow(layerElement) {
+	// Find table row which corresponds to the layer
+	var $row = $('#t-'+layerElement.feature.properties.pkey);
 	
+	// If we have an active highlight, remove the highlight from the table row
 	if (activeAggregate !== null) {
-		var atlayer = $('#t-'+activeAggregate.feature.properties.pkey);
-		atlayer.removeClass('highlighted');
+		var $highlightedRow = $('#t-'+activeAggregate.feature.properties.pkey);
+		$highlightedRow.removeClass('highlighted');
 	}
 	
-	tlayer.addClass('highlighted');
+	// Highlight the table row
+	$row.addClass('highlighted');
 	
-	var tlayertop = tlayer.offset().top;
-	var t = $("#table");
-	var dtop = t.offset().top;
-	t.scrollTop( t.scrollTop()  + tlayertop - dtop);
+	// Scroll the table view to the highlighted item
+	var rowTop = $row.offset().top;
+	var $table = $("#table");
+	var tableTop = $table.offset().top;
+	$table.scrollTop( $table.scrollTop()  + rowTop - tableTop);
 }
 
 /**
@@ -625,7 +639,6 @@ aggregatesControl.onAdd = function(map) {
     reloadAggregates().then(function() {
       updateAggregateVisibility();
 			map.spin(false);
-			updateTable();
     });
   };
 
@@ -872,78 +885,99 @@ map.on('popupopen', function(popup){
 		}
 });
 
+/**
+ * Fill the data in the table view from aggregate data
+ * @param level Level of the aggregate data
+ * @param aggregates Aggregate data
+ */
 function updateTable(level,aggregates) {
-
+console.log('Update table for '+level);
+	// Only fill data from the village table FIXME
 	if ( level === 'village' ) {
 		
-		var h = "";
-		
-		$.each( aggregates.features, function( i, e ) {
-			h += "<tr class='village' id='t-" + e.properties.pkey + "'>";
-			h += "<td><a class='village-toggle' data-expanded=''>+</a></td>";
-			h += "<td>" + e.properties.pkey + "</td>";
-			h += "<td>" + e.properties.level_name + "</td>";
-			h += "<td>" + e.properties.count + "</td>";
-			h += "<td>1</td>";
-			h += "<td><a class='flooded-toggle'>Flooded</a></td>";
-			h += "</tr>";
+		// Construct HTML for table view of the aggregate data
+		var html = "";
+		$.each( aggregates.features, function( i, feature ) {
+			html += "<tr class='village' id='t-" + feature.properties.pkey + "'>";
+			html += "<td><a class='village-toggle' data-expanded=''>+</a></td>";
+			html += "<td>" + feature.properties.pkey + "</td>";
+			html += "<td>" + feature.properties.level_name + "</td>";
+			html += "<td>" + feature.properties.count + "</td>";
+			html += "<td>1</td>";
+			html += "<td><a class='flooded-toggle'>Flooded</a></td>";
+			html += "</tr>";
 			
-			h += "<tr class='rw t-" + e.properties.pkey + "' style='display:none;' id='t-" + e.properties.pkey + "'>";
-			h += "<td></td>";
-			h += "<td>123</td>";
-			h += "<td>RW 1</td>";
-			h += "<td>1</td>";
-			h += "<td>2</td>";
-			h += "<td></td>";
-			h += "</tr>";			
+			html += "<tr class='rw t-" + feature.properties.pkey + "' style='display:none;' id='t-" + feature.properties.pkey + "'>";
+			html += "<td></td>";
+			html += "<td>123</td>";
+			html += "<td>RW 1</td>";
+			html += "<td>1</td>";
+			html += "<td>2</td>";
+			html += "<td></td>";
+			html += "</tr>";			
 
-			h += "<tr class='rw t-" + e.properties.pkey + "' style='display:none;' id='t-" + e.properties.pkey + "'>";
-			h += "<td></td>";
-			h += "<td>456</td>";
-			h += "<td>RW 2</td>";
-			h += "<td>3</td>";
-			h += "<td>4</td>";
-			h += "<td></td>";
-			h += "</tr>";			
+			html += "<tr class='rw t-" + feature.properties.pkey + "' style='display:none;' id='t-" + feature.properties.pkey + "'>";
+			html += "<td></td>";
+			html += "<td>456</td>";
+			html += "<td>RW 2</td>";
+			html += "<td>3</td>";
+			html += "<td>4</td>";
+			html += "<td></td>";
+			html += "</tr>";			
 		});
-		
-		$("#table table tbody").html( h );
-		$("#table tr[id^=t]").on('mouseover', function() {
+		$("#table table tbody").html( html );
+
+		// Store references to layers with each row
+		$("#table tr[id^=t]").each( function(i) {
+			var $row = $(this);
 			var id = $(this).attr('id');
 			var lid = id.substring(2, id.length);
-			$.each( aggregateLayers[level]._layers, function(i,e) {
-				if (e.feature.properties.pkey===Number(lid)) {
-					_highlightLayer( e );
+			$.each( aggregateLayers[level]._layers, function(i,layer) {
+				if ( layer.feature.properties.pkey === Number(lid) ) {
+					$row.data( 'layer', layer );
 				}
 			});
+			// TODO Neighbourhood layers
+		});
+		
+		// When hovering over a table row, highlight the row and the corresponding layer
+		$("#table tr[id^=t]").on('mouseover', function() {
+			highlightLayer( $(this).data('layer') );
 			$(this).addClass('highlighted');
 		}).on('mouseout', function() {
 			$(this).removeClass('highlighted');
 		});
 		
+		// Expand/collapse the neighbourhood data rows for the village
 		$('.village-toggle').on('click', function() {
-			var toggleButton = $(this);
-			var villageClass = '.' + toggleButton.closest('tr').attr('id');
-			if (toggleButton.data('expanded')) {
-				toggleButton.text('+');
+			var $toggleButton = $(this);
+			var villageClass = '.' + $toggleButton.closest('tr').attr('id');
+			if ($toggleButton.data('expanded')) {
+				$toggleButton.text('+');
 				$( villageClass ).hide();
-				toggleButton.data('expanded', false);
+				$toggleButton.data('expanded', false);
 			} else {
-				toggleButton.text('-');
+				$toggleButton.text('-');
 				$( villageClass ).show();
-				toggleButton.data('expanded', true);
+				$toggleButton.data('expanded', true);
 			}
 		});
 		
+		// Handle the 'Flooded' toggle button
 		$('.flooded-toggle').on('click', function() {
-			var toggleButton = $(this);
-			var villageClass = '.' + toggleButton.closest('tr').attr('id');
-			if (toggleButton.data('flooded')) {
-				toggleButton.removeClass('flooded');
-				toggleButton.data('flooded', false);
+			var $toggleButton = $(this);
+			var villageClass = '.' + $toggleButton.closest('tr').attr('id');
+			// TODO Send event to server
+			if ($toggleButton.data('flooded')) {
+				$toggleButton.removeClass('flooded');
+				$toggleButton.data('flooded', false);
+				$toggleButton.closest('tr').data('layer').feature.properties.flooded = false;
+				highlightLayer( $toggleButton.closest('tr').data('layer') );
 			} else {
-				toggleButton.addClass('flooded');
-				toggleButton.data('flooded', true);
+				$toggleButton.addClass('flooded');
+				$toggleButton.data('flooded', true);
+				$toggleButton.closest('tr').data('layer').feature.properties.flooded = true;
+				$toggleButton.closest('tr').data('layer').setStyle({fillColor:'#00f'});
 			}
 		});
 		
