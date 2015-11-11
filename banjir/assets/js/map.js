@@ -545,10 +545,6 @@ var aggregatesControl = L.control({position:'bottomright'});
 
 var hideAggregates = function() {
   if (aggregateLayers) {
-    if (aggregateLayers.subdistrict) {
-      map.removeLayer(aggregateLayers.subdistrict);
-      window.layerControl.removeLayer(aggregateLayers.subdistrict);
-    }
     if (aggregateLayers.village) {
       map.removeLayer(aggregateLayers.village);
       window.layerControl.removeLayer(aggregateLayers.village);
@@ -562,10 +558,6 @@ var hideAggregates = function() {
 
 var reloadAggregates = function() {
   var promises = {
-    subdistrict: getAggregates('subdistrict')
-				.then(function(aggregates) {
-					return loadAggregates('subdistrict', aggregates);
-				}),
     village: getAggregates('village')
 				.then(function(aggregates) {
 					return loadAggregates('village', aggregates);
@@ -583,15 +575,7 @@ var reloadAggregates = function() {
 var updateAggregateVisibility = function() {
 	var zoom  = map.getZoom();
 
-	if (zoom < 13) {
-		hideAggregates();
-		if (map.hasLayer(window.confirmedPoints) === false){
-			aggregateLayers.subdistrict.addTo(map);
-			aggregateLayers.subdistrict.bringToBack();
-		}
-		window.layerControl.addBaseLayer(aggregateLayers.subdistrict, layernames.subdistrict);
-
-	} else if (zoom >= 13 && zoom <= 14) {
+	if (zoom <= 14) {
 		hideAggregates();
 		if (map.hasLayer(window.confirmedPoints) === false){
 			aggregateLayers.village.addTo(map);
@@ -607,8 +591,7 @@ var updateAggregateVisibility = function() {
 		}
 		window.layerControl.addBaseLayer(aggregateLayers.rw, layernames.neighbourhood);
 
-	}
-	else {
+	} else {
 		hideAggregates();
 
 	}
@@ -633,7 +616,6 @@ aggregatesControl.onAdd = function(map) {
     $('.control.aggregates button.active').removeClass('active');
     this.className += " active";
     aggregateHours = parseInt(this.getAttribute('value'), 10);
-    aggregateLayers.subdistrict.foo = "bar";
 		map.spin(true);
     hideAggregates();
     reloadAggregates().then(function() {
@@ -764,20 +746,8 @@ var loadPrimaryLayers = function(layerControl) {
 		confirmed: getReports('confirmed')
 			.then(loadConfirmedPoints)};
 
-  if (!window.isTouch) {
-    layerPromises.subdistrict = getAggregates('subdistrict')
-      .then(function(aggregates) {
-        return loadAggregates('subdistrict', aggregates);
-      });
-  }
-
 	return new RSVP.Promise(function(resolve, reject) {
 		RSVP.hash(layerPromises).then(function(overlays) {
-
-      if (!window.isTouch) {
-        layerControl.addBaseLayer(overlays.subdistrict, layernames.subdistrict);
-        //overlays.subdistrict
-      }
 
 			layerControl.addBaseLayer(overlays.confirmed, layernames.confirmed);
 			overlays.confirmed.addTo(map);
@@ -805,7 +775,6 @@ var loadSecondaryLayers = function(layerControl) {
 				})
 		};
 
-    if (!window.isTouch) {
       _.extend(secondaryPromises, {
       village: getAggregates('village')
 				.then(function(aggregates) {
@@ -816,7 +785,7 @@ var loadSecondaryLayers = function(layerControl) {
 					return loadAggregates('rw', aggregates);
 				})
       });
-    }
+    
 
 		RSVP.hash(secondaryPromises).then(function(overlays) {
 			// Add overlays to the layer control
@@ -891,7 +860,7 @@ map.on('popupopen', function(popup){
  * @param aggregates Aggregate data
  */
 function updateTable(level,aggregates) {
-console.log('Update table for '+level);
+
 	// Only fill data from the village table FIXME
 	if ( level === 'village' ) {
 		
