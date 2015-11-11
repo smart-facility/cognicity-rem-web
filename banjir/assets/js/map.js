@@ -376,6 +376,11 @@ function highlightTableRow(layerElement) {
 	// Find table row which corresponds to the layer
 	var $row = $('#t-'+layerElement.feature.properties.pkey);
 	
+	if ($row.length===0) {
+		// FIXME Error handling?
+		return;
+	}
+	
 	// If we have an active highlight, remove the highlight from the table row
 	if (activeAggregate !== null) {
 		var $highlightedRow = $('#t-'+activeAggregate.feature.properties.pkey);
