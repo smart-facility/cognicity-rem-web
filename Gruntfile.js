@@ -109,6 +109,13 @@ module.exports = function(grunt) {
           { expand: true, flatten: true, src: "banjir/vendor/fonts/*", dest: "build/banjir/fonts/"},
           { expand: true, flatten: true, src: "banjir/robots.txt", dest: "build/"}
         ]
+      },
+      js: {
+    	  files: [
+	          {src: 'build/banjir/js/application.js', dest: 'build/banjir/js/application.min.js'},
+	          {src: "banjir/assets/js/analytics.js", dest: "build/banjir/js/analytics.min.js"},
+	          {src: "banjir/assets/js/map.js", dest: "build/banjir/js/map.min.js"}
+    	  ]
       }
     },
     connect: {
@@ -123,7 +130,7 @@ module.exports = function(grunt) {
     watch: {
       js: {
         files: 'banjir/assets/js/**/*.js',
-        tasks: ['jshint', 'concat:js', 'uglify:build']
+        tasks: ['jshint', 'concat:js', 'copy:js']
       },
       css: {
         files: 'banjir/assets/css/**/*.css',
@@ -171,5 +178,6 @@ module.exports = function(grunt) {
   grunt.registerTask('server', ['assets', 'site', 'concurrent:server']);
   grunt.registerTask('default', ['assets', 'site']);
   grunt.registerTask('docs', ['jsdoc:dist'])
+  grunt.registerTask('dev', ['copy:js'])
 
 };
