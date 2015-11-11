@@ -881,7 +881,7 @@ function updateTable(level,aggregates) {
 			html += "<td><a class='flooded-toggle'>Flooded</a></td>";
 			html += "</tr>";
 			
-			html += "<tr class='rw t-" + feature.properties.pkey + "' style='display:none;' id='t-" + feature.properties.pkey + "'>";
+			html += "<tr class='rw t-" + feature.properties.pkey + "' style='display:none;'>";
 			html += "<td></td>";
 			html += "<td>123</td>";
 			html += "<td>RW 1</td>";
@@ -890,7 +890,7 @@ function updateTable(level,aggregates) {
 			html += "<td></td>";
 			html += "</tr>";			
 
-			html += "<tr class='rw t-" + feature.properties.pkey + "' style='display:none;' id='t-" + feature.properties.pkey + "'>";
+			html += "<tr class='rw t-" + feature.properties.pkey + "' style='display:none;'>";
 			html += "<td></td>";
 			html += "<td>456</td>";
 			html += "<td>RW 2</td>";
@@ -916,7 +916,12 @@ function updateTable(level,aggregates) {
 		
 		// When hovering over a table row, highlight the row and the corresponding layer
 		$("#table tr[id^=t]").on('mouseover', function() {
-			highlightLayer( $(this).data('layer') );
+			var layer = $(this).data('layer');
+			if (!layer || !layer._map) {
+				// FIXME error handling?
+				return;
+			} 
+			highlightLayer( layer );
 			$(this).addClass('highlighted');
 		}).on('mouseout', function() {
 			$(this).removeClass('highlighted');
