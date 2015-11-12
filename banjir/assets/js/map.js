@@ -211,13 +211,56 @@ var aggregateVersions = {};
 var aggregateInc = 0;
 
 var loadAggregates = function(level, aggregates){
-	var aggregateLayer = L.geoJson(aggregates, {style:styleAggregates, onEachFeature:labelAggregates});
+	var aggregateLayer = L.geoJson(aggregates, {style:styleAggregates});
 	aggregateLayers[level] = aggregateLayer;
 	aggregateLayers[level].version = aggregateInc;
   aggregateVersions[level] = aggregateInc;
   aggregateInc += 1;
-  updateTable(level, aggregates);
 	return aggregateLayers[level];
+};
+
+/**
+ * Load the outline polygons
+ */
+var loadOutlines = function(outlines){
+	// FIXME single level of outlines
+	var newFeatures = [];
+	for (var i=0; i<outlines.features.length; i++) {
+		var nf = outlines.features[i];
+		var alreadySeen = false;
+		var oldFeature;
+		for (var i2=0; i2<i; i2++) {
+			var of = outlines.features[i2];
+			if (of.properties.pkey === nf.properties.pkey && of.properties.source !== nf.properties.source) {
+				alreadySeen = true;
+				oldFeature = of;
+			}
+		}
+		if (!alreadySeen) {
+			if (nf.properties.source==='twitter') {
+				nf.properties.counts = {
+					twitter: nf.properties.count
+				};
+			} else {
+				nf.properties.counts = {
+					detik: nf.properties.count
+				};
+			}
+			newFeatures.push( nf );
+		} else {
+			if (nf.properties.source==='twitter') {
+				oldFeature.properties.counts.twitter = nf.properties.count;
+			} else {
+				oldFeature.properties.counts.detik = nf.properties.count;
+			}
+		}
+	}
+	outlines.features = newFeatures;
+	// FIXME single level of outlines
+	
+	outlineLayer = L.geoJson(outlines, {style:styleOutline, onEachFeature:labelOutlines});
+	populateTable(outlines, outlineLayer);
+	return outlineLayer;
 };
 
 /**
@@ -275,7 +318,7 @@ var styleInfrastructure = {
 	*/
 function styleAggregates(feature) {
     return {
-        fillColor: feature.properties.flooded ? '#00f' : getColor(feature.properties.count),
+        fillColor: getColor(feature.properties.count),
         weight: 0,
 				//disabled polygon borders for clarity
         //opacity: 1,
@@ -283,6 +326,27 @@ function styleAggregates(feature) {
         //dashArray: '3',
         fillOpacity: 0.7
     };
+}
+
+/**
+Styles outline polygons
+
+@param {object} feature - individual Leaflet/GeoJSON feature object
+*/
+function styleOutline(feature) {
+	var style = {
+		weight: 0,
+		fillOpacity: 0.5,
+		fillColor: 'transparent'
+	};
+	if (feature.properties.flooded) {
+		style.fillColor = '#00f';
+	}
+	return style;
+}
+
+function updateOutline(layer) {
+	layer.setStyle(styleOutline(layer.feature));
 }
 
 /**
@@ -304,25 +368,18 @@ function getColor(d) {
 }
 
 /**
-	Set a popup label for an aggregate poplygon based on it's count attribute
+Set a popup label for an aggregate poplygon based on it's count attribute
 
-	@param {object} feature - individual Leaflet/GeoJSON object
-	@param {object}	layer - leaflet layer object
+@param {object} feature - individual Leaflet/GeoJSON object
+@param {object}	layer - leaflet layer object
 */
-function labelAggregates(feature, layer) {
-		// commented pop up label as working on touch/info box
-    // does this feature have a property named count?
-  	/*if (feature.properties && feature.properties.count && feature.properties.level_name) {
-        layer.bindPopup(JSON.stringify(feature.properties.level_name+': '+feature.properties.count+' reports'));
-    }*/
-		layer.on({
-			mouseover: highlightAggregate,
-			mouseout: resetAggregate,
-      click: highlightAggregate,
-			dblclick: zoomToFeature
-		});
-		
-//		layer.attr('id',feature.properties.pkey);
+function labelOutlines(feature, layer) {
+	layer.on({
+		mouseover: highlightOutline,
+		mouseout: resetOutline,
+		click: highlightOutline,
+		dblclick: zoomToFeature
+	});
 }
 
 var activeAggregate = null;
@@ -340,6 +397,18 @@ function highlightAggregate(e) {
 }
 
 /**
+Visual highlighting of polygon when hovered over with the mouse
+
+@param {object} event - leaflet event object
+*/
+function highlightOutline(e) {
+	var layer = e.target;
+	
+	highlightTableRow( layer );  
+	highlightOutlineLayer( layer );
+}
+
+/**
  * Highlight the layer
  * @param {object} layerElement Leaflet layer object
  */
@@ -347,7 +416,7 @@ function highlightLayer(layerElement) {
 	// If we've got an already highlighted layer, unhighlight it
 	if (activeAggregate !== null) {
 		activeAggregate.setStyle(styleAggregates(activeAggregate.feature));
-		activeAggregate.bringToBack();
+		//activeAggregate.bringToBack();
 	}
 	
 	// Highlight the layer
@@ -359,7 +428,36 @@ function highlightLayer(layerElement) {
 		fillOpacity: 0.7
 	});
 	
-	layerElement.bringToFront(); //buggy?
+	//layerElement.bringToFront(); //buggy?
+	
+	// Update the tooltip
+	info.update(layerElement.feature.properties);
+	  
+	// Retain which layer is highlighted
+	activeAggregate = layerElement;
+}
+
+/**
+ * Highlight the layer
+ * @param {object} layerElement Leaflet layer object
+ */
+function highlightOutlineLayer(layerElement) {
+	// If we've got an already highlighted layer, unhighlight it
+	if (activeAggregate !== null) {
+		activeAggregate.setStyle(styleOutline(activeAggregate.feature));
+		//activeAggregate.bringToBack();
+	}
+	
+	// Highlight the layer
+	layerElement.setStyle({
+		weight: 5,
+		color: '#333',
+		opacity:1,
+		dashArray: '',
+		fillOpacity: 0.7
+	});
+	
+	//layerElement.bringToFront(); //buggy?
 	
 	// Update the tooltip
 	info.update(layerElement.feature.properties);
@@ -406,11 +504,24 @@ function resetAggregate(e){
 	var layer = e.target;
 
 	layer.setStyle(styleAggregates(layer.feature));
-	layer.bringToBack();
+	//layer.bringToBack();
 
 	info.update();
 }
 
+/**
+Reset style of aggregate after hover over
+
+@param {object} event - leaflet event object
+*/
+function resetOutline(e){
+	var layer = e.target;
+	
+	layer.setStyle(styleOutline(layer.feature));
+	//layer.bringToBack();
+	
+	info.update();
+}
 
 function zoomToFeature(e) {
     map.fitBounds(e.target.getBounds());
@@ -584,7 +695,7 @@ var updateAggregateVisibility = function() {
 		hideAggregates();
 		if (map.hasLayer(window.confirmedPoints) === false){
 			aggregateLayers.village.addTo(map);
-			aggregateLayers.village.bringToBack();
+			//aggregateLayers.village.bringToBack();
 		}
 		window.layerControl.addBaseLayer(aggregateLayers.village, layernames.village);
 
@@ -592,15 +703,14 @@ var updateAggregateVisibility = function() {
 		hideAggregates();
 		if (map.hasLayer(window.confirmedPoints) === false){
 			aggregateLayers.rw.addTo(map);
-			aggregateLayers.rw.bringToBack();
+			//aggregateLayers.rw.bringToBack();
 		}
 		window.layerControl.addBaseLayer(aggregateLayers.rw, layernames.neighbourhood);
 
-	} else {
-		hideAggregates();
-
 	}
-  activeAggregate = null;
+	
+	outlineLayer.bringToFront();
+	activeAggregate = null;
 };
 
 aggregatesControl.onAdd = function(map) {
@@ -735,8 +845,7 @@ if (document.documentElement.lang == 'in'){
 	layernames.waterways = 'Aliran Air';
 	layernames.pumps = 'Pompa Air';
 	layernames.floodgates = 'Pintu Air';
-}
-else {
+} else {
 	layernames.confirmed = 'Confirmed Reports';
 	layernames.subdistrict = 'Subdistrict Aggregates';
 	layernames.village = 'Village Aggregates';
@@ -749,13 +858,19 @@ else {
 var loadPrimaryLayers = function(layerControl) {
 	var layerPromises = {
 		confirmed: getReports('confirmed')
-			.then(loadConfirmedPoints)};
+			.then(loadConfirmedPoints),
+		outlines: getAggregates('village')
+			.then(function(outlines) {
+				return loadOutlines(outlines);
+			})
+	};
 
 	return new RSVP.Promise(function(resolve, reject) {
 		RSVP.hash(layerPromises).then(function(overlays) {
 
 			layerControl.addBaseLayer(overlays.confirmed, layernames.confirmed);
 			overlays.confirmed.addTo(map);
+			overlays.outlines.addTo(map);
 			map.spin(false);
 
 			resolve(layerControl);
@@ -777,20 +892,16 @@ var loadSecondaryLayers = function(layerControl) {
 			floodgates: getInfrastructure('floodgates')
 				.then(function(floodgates){
 					return loadInfrastructure('floodgates', floodgates);
-				})
-		};
-
-      _.extend(secondaryPromises, {
-      village: getAggregates('village')
+				}),
+			village: getAggregates('village')
 				.then(function(aggregates) {
 					return loadAggregates('village', aggregates);
 				}),
-      rw: getAggregates('rw')
+			rw: getAggregates('rw')
 				.then(function(aggregates) {
 					return loadAggregates('rw', aggregates);
 				})
-      });
-    
+		};
 
 		RSVP.hash(secondaryPromises).then(function(overlays) {
 			// Add overlays to the layer control
@@ -807,37 +918,23 @@ $(function() {
 	map.spin(true);
 	window.layerControl = L.control.layers({}, {}, {position: 'bottomleft'}).addTo(map);
 	loadPrimaryLayers(window.layerControl).then(loadSecondaryLayers);
-});
-
-/**
-	Listen for map events and load required layers [non-touch devices]
-*/
-if (!window.isTouch){
+	
 	//Update aggregates by zoom level
 	map.on('zoomend', function(){
-			updateAggregateVisibility();
+		updateAggregateVisibility();
 	});
-
+	
 	//Toggle Aggregate legend
 	map.on('baselayerchange', function(event){
 		if (event.layer == window.confirmedPoints){
-			if (info._map){
-				map.removeControl(info);
-			}
 			if (legend._map){
 				map.removeControl(legend);
 			}
 			if (aggregatesControl._map){
 				map.removeControl(aggregatesControl);
 			}
-		}
-		else {
+		} else {
 			//Update legend boxes
-			if (!info._map){
-				info.addTo(map);
-				info.update();
-			}
-
 			if (!legend._map){
 				legend.addTo(map);
 			}
@@ -845,18 +942,25 @@ if (!window.isTouch){
 				aggregatesControl.addTo(map);
 				$('.control.aggregates button').prop('disabled', false);
 			}
-			event.layer.bringToBack();
+			//event.layer.bringToBack();
 		}
+//		updateAggregateVisibility();
+		//if (outlineLayer) outlineLayer.bringToFront();
 	});
-}
+	
+	// Always show info box
+	info.addTo(map);
+	info.update();
+});
+
 
 /**
 	Ask popups to render using Twitter embedded tweets
 */
 map.on('popupopen', function(popup){
 	if ($('tweet-container')){
-			twttr.widgets.load($('.leaflet-popup-content'));
-		}
+		twttr.widgets.load($('.leaflet-popup-content'));
+	}
 });
 
 /**
@@ -864,102 +968,120 @@ map.on('popupopen', function(popup){
  * @param level Level of the aggregate data
  * @param aggregates Aggregate data
  */
-function updateTable(level,aggregates) {
-
-	// Only fill data from the village table FIXME
-	if ( level === 'village' ) {
+function populateTable(outlines, outlineLayer) {
 		
-		// Construct HTML for table view of the aggregate data
-		var html = "";
-		$.each( aggregates.features, function( i, feature ) {
-			html += "<tr class='village' id='t-" + feature.properties.pkey + "'>";
-			html += "<td><a class='village-toggle' data-expanded=''>+</a></td>";
-			html += "<td>" + feature.properties.pkey + "</td>";
-			html += "<td>" + feature.properties.level_name + "</td>";
-			html += "<td>" + feature.properties.count + "</td>";
-			html += "<td>1</td>";
-			html += "<td><a class='flooded-toggle'>Flooded</a></td>";
-			html += "</tr>";
-			
-			html += "<tr class='rw t-" + feature.properties.pkey + "' style='display:none;'>";
-			html += "<td></td>";
-			html += "<td>123</td>";
-			html += "<td>RW 1</td>";
-			html += "<td>1</td>";
-			html += "<td>2</td>";
-			html += "<td></td>";
-			html += "</tr>";			
+	// Construct HTML for table view of the aggregate data
+	var html = "";
+	$.each( outlines.features, function( i, feature ) {
+		html += "<tr class='village' id='t-" + feature.properties.pkey + "'>";
+		html += "<td><a class='village-toggle' data-expanded=''>+</a></td>";
+		html += "<td>" + feature.properties.pkey + "</td>";
+		html += "<td>" + feature.properties.level_name + "</td>";
+		html += "<td>" + feature.properties.counts.twitter + "</td>";
+		html += "<td>" + feature.properties.counts.detik + "</td>";
+		html += "<td><a class='flooded-toggle'>Flooded</a></td>";
+		html += "</tr>";
+		
+		html += "<tr class='rw t-" + feature.properties.pkey + "' style='display:none;'>";
+		html += "<td></td>";
+		html += "<td>123</td>";
+		html += "<td>RW 1</td>";
+		html += "<td>1</td>";
+		html += "<td>2</td>";
+		html += "<td></td>";
+		html += "</tr>";			
 
-			html += "<tr class='rw t-" + feature.properties.pkey + "' style='display:none;'>";
-			html += "<td></td>";
-			html += "<td>456</td>";
-			html += "<td>RW 2</td>";
-			html += "<td>3</td>";
-			html += "<td>4</td>";
-			html += "<td></td>";
-			html += "</tr>";			
+		html += "<tr class='rw t-" + feature.properties.pkey + "' style='display:none;'>";
+		html += "<td></td>";
+		html += "<td>456</td>";
+		html += "<td>RW 2</td>";
+		html += "<td>3</td>";
+		html += "<td>4</td>";
+		html += "<td></td>";
+		html += "</tr>";			
+	});
+	$("#table table tbody").html( html );
+
+	// Store references to layers with each row
+	$("#table tr[id^=t]").each( function(i) {
+		var $row = $(this);
+		var id = $(this).attr('id');
+		var lid = id.substring(2, id.length);
+		$.each( outlineLayer._layers, function(i,layer) {
+			if ( layer.feature.properties.pkey === Number(lid) ) {
+				$row.data( 'layer', layer );
+			}
 		});
-		$("#table table tbody").html( html );
+		updateFloodedOutlineLayer($row);
+		// TODO Neighbourhood layers
+	});
+	
+	// When hovering over a table row, highlight the row and the corresponding layer
+	$("#table tr[id^=t]").on('mouseover', function() {
+		var layer = $(this).data('layer');
+		if (!layer || !layer._map) {
+			// FIXME error handling?
+			return;
+		} 
+		highlightOutlineLayer( layer );
+		$(this).addClass('highlighted');
+	}).on('mouseout', function() {
+		$(this).removeClass('highlighted');
+	});
+	
+	// Expand/collapse the neighbourhood data rows for the village
+	$('.village-toggle').on('click', function() {
+		var $toggleButton = $(this);
+		var villageClass = '.' + $toggleButton.closest('tr').attr('id');
+		if ($toggleButton.data('expanded')) {
+			$toggleButton.text('+');
+			$( villageClass ).hide();
+			$toggleButton.data('expanded', false);
+		} else {
+			$toggleButton.text('-');
+			$( villageClass ).show();
+			$toggleButton.data('expanded', true);
+		}
+	});
+	
+	function toggleFloodedState($row) {
+		var layer = $row.data('layer');
 
-		// Store references to layers with each row
-		$("#table tr[id^=t]").each( function(i) {
-			var $row = $(this);
-			var id = $(this).attr('id');
-			var lid = id.substring(2, id.length);
-			$.each( aggregateLayers[level]._layers, function(i,layer) {
-				if ( layer.feature.properties.pkey === Number(lid) ) {
-					$row.data( 'layer', layer );
-				}
+		if (layer.feature.properties.flooded) {
+			layer.feature.properties.flooded = false;
+			$.ajax('/banjir/data/api/v2/rem/flooded/'+layer.feature.properties.pkey, {
+				method: 'PUT',
+				data: 'flooded=false'
 			});
-			// TODO Neighbourhood layers
-		});
-		
-		// When hovering over a table row, highlight the row and the corresponding layer
-		$("#table tr[id^=t]").on('mouseover', function() {
-			var layer = $(this).data('layer');
-			if (!layer || !layer._map) {
-				// FIXME error handling?
-				return;
-			} 
-			highlightLayer( layer );
-			$(this).addClass('highlighted');
-		}).on('mouseout', function() {
-			$(this).removeClass('highlighted');
-		});
-		
-		// Expand/collapse the neighbourhood data rows for the village
-		$('.village-toggle').on('click', function() {
-			var $toggleButton = $(this);
-			var villageClass = '.' + $toggleButton.closest('tr').attr('id');
-			if ($toggleButton.data('expanded')) {
-				$toggleButton.text('+');
-				$( villageClass ).hide();
-				$toggleButton.data('expanded', false);
-			} else {
-				$toggleButton.text('-');
-				$( villageClass ).show();
-				$toggleButton.data('expanded', true);
-			}
-		});
-		
-		// Handle the 'Flooded' toggle button
-		$('.flooded-toggle').on('click', function() {
-			var $toggleButton = $(this);
-			var villageClass = '.' + $toggleButton.closest('tr').attr('id');
-			// TODO Send event to server
-			if ($toggleButton.data('flooded')) {
-				$toggleButton.removeClass('flooded');
-				$toggleButton.data('flooded', false);
-				$toggleButton.closest('tr').data('layer').feature.properties.flooded = false;
-				highlightLayer( $toggleButton.closest('tr').data('layer') );
-			} else {
-				$toggleButton.addClass('flooded');
-				$toggleButton.data('flooded', true);
-				$toggleButton.closest('tr').data('layer').feature.properties.flooded = true;
-				$toggleButton.closest('tr').data('layer').setStyle({fillColor:'#00f'});
-			}
-		});
-		
+		} else {
+			layer.feature.properties.flooded = true;
+			$.ajax('/banjir/data/api/v2/rem/flooded/'+layer.feature.properties.pkey, {
+				method: 'PUT',
+				data: 'flooded=true' 
+			});
+		}
 	}
+	
+	function updateFloodedOutlineLayer($row) {
+		var $toggle = $('.flooded-toggle', $row);
+		var layer = $row.data('layer');
+		
+		if (layer.feature.properties.flooded) {
+			$toggle.addClass('flooded');
+		} else {
+			$toggle.removeClass('flooded');
+		}
+		updateOutline(layer);
+	}
+	
+	// Handle the 'Flooded' toggle button
+	$('.flooded-toggle').on('click', function() {
+		var $toggleButton = $(this);
+		var $row = $toggleButton.closest('tr');
+		var layer = $row.data('layer');
+		
+		toggleFloodedState($row);
+		updateFloodedOutlineLayer($row);
+	});
 	
 }
