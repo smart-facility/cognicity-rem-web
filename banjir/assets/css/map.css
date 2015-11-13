@@ -73,6 +73,7 @@ body {
     font-size: 12px;
     padding: 1px 5px;
     cursor: pointer;
+    background-color: #fff;
 }
 
 #table table .village .flooded-toggle.flooded {

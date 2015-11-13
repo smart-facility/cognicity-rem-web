@@ -222,9 +222,21 @@ var loadAggregates = function(level, aggregates){
 /**
  * Load the outline polygons
  */
-var loadOutlines = function(outlines){	
+var loadOutlines = function(village, rw){	
 	// FIXME manipulate response for easy parsing
-	$.each( outlines.features, function(i,feature) {
+	$.each( village.features, function(i,feature) {
+		var newCounts = {
+			total: 0
+		};
+		if (feature.properties.counts) {
+			$.each( feature.properties.counts, function(j, count) {
+				newCounts[count.source] = count.count;
+				newCounts.total += count.count;
+			});
+		}
+		feature.properties.counts = newCounts;
+	});
+	$.each( rw.features, function(i,feature) {
 		var newCounts = {
 			total: 0
 		};
@@ -238,8 +250,8 @@ var loadOutlines = function(outlines){
 	});
 	// END FIXME
 	
-	outlineLayer = L.geoJson(outlines, {style:styleOutline, onEachFeature:labelOutlines});
-	populateTable(outlines, outlineLayer);
+	outlineLayer = L.geoJson(village, {style:styleOutline, onEachFeature:labelOutlines});
+	populateTable(village, outlineLayer, rw);
 	return outlineLayer;
 };
 
@@ -452,7 +464,7 @@ function highlightOutlineLayer(layerElement) {
  */
 function highlightTableRow(layerElement) {
 	// Find table row which corresponds to the layer
-	var $row = $('#t-'+layerElement.feature.properties.pkey);
+	var $row = $('#t-'+layerElement.feature.properties.level_name.replace(" ","_"));
 	
 	if ($row.length===0) {
 		// FIXME Error handling?
@@ -461,7 +473,7 @@ function highlightTableRow(layerElement) {
 	
 	// If we have an active highlight, remove the highlight from the table row
 	if (activeAggregate !== null) {
-		var $highlightedRow = $('#t-'+activeAggregate.feature.properties.pkey);
+		var $highlightedRow = $('#t-'+activeAggregate.feature.properties.level_name.replace(" ","_"));
 		$highlightedRow.removeClass('highlighted');
 	}
 	
@@ -840,11 +852,13 @@ var loadPrimaryLayers = function(layerControl) {
 		confirmed: getReports('confirmed')
 			.then(loadConfirmedPoints),
 		outlines: getAggregates('village')
-			.then(function(outlines) {
-				return loadOutlines(outlines);
+			.then(function(village) {
+				return getAggregates('rw').then( function(rw) {
+					return loadOutlines(village, rw);
+				});
 			})
 	};
-
+	
 	return new RSVP.Promise(function(resolve, reject) {
 		RSVP.hash(layerPromises).then(function(overlays) {
 
@@ -945,52 +959,51 @@ map.on('popupopen', function(popup){
 
 /**
  * Fill the data in the table view from aggregate data
- * @param level Level of the aggregate data
- * @param aggregates Aggregate data
+ * TODO
  */
-function populateTable(outlines, outlineLayer) {
+function populateTable(outlines, outlineLayer, rw) {
 		
 	// Construct HTML for table view of the aggregate data
 	var html = "";
 	$.each( outlines.features, function( i, feature ) {		
 		var twitterCount = (feature.properties.counts && feature.properties.counts.twitter) ? feature.properties.counts.twitter : 0; 
 		var detikCount = (feature.properties.counts && feature.properties.counts.detik) ? feature.properties.counts.detik : 0; 
-		html += "<tr class='village' id='t-" + feature.properties.pkey + "'>";
+		html += "<tr class='village' id='t-" + feature.properties.level_name.replace(" ","_") + "'>";
 		html += "<td><a class='village-toggle' data-expanded=''>+</a></td>";
 		html += "<td>" + feature.properties.pkey + "</td>";
-		html += "<td>" + feature.properties.level_name + "</td>";
+		html += "<td id='v-"+feature.properties.level_name.replace(" ","_")+"'>" + feature.properties.level_name + "</td>";
 		html += "<td>" + twitterCount+ "</td>";
 		html += "<td>" + detikCount + "</td>";
 		html += "<td><a class='flooded-toggle'>Flooded</a></td>";
-		html += "</tr>";
-		
-		html += "<tr class='rw t-" + feature.properties.pkey + "' style='display:none;'>";
-		html += "<td></td>";
-		html += "<td>123</td>";
-		html += "<td>RW 1</td>";
-		html += "<td>1</td>";
-		html += "<td>2</td>";
-		html += "<td></td>";
-		html += "</tr>";			
-
-		html += "<tr class='rw t-" + feature.properties.pkey + "' style='display:none;'>";
-		html += "<td></td>";
-		html += "<td>456</td>";
-		html += "<td>RW 2</td>";
-		html += "<td>3</td>";
-		html += "<td>4</td>";
-		html += "<td></td>";
-		html += "</tr>";			
+		html += "</tr>";		
 	});
 	$("#table table tbody").html( html );
 
+	var $tBody = $("#table table tbody");
+	$.each( rw.features, function(i, feature) {
+		var twitterCount = (feature.properties.counts && feature.properties.counts.twitter) ? feature.properties.counts.twitter : 0; 
+		var detikCount = (feature.properties.counts && feature.properties.counts.detik) ? feature.properties.counts.detik : 0; 
+		$('#v-'+feature.properties.village_name.replace(" ","_"), $tBody).closest('tr').after(
+			$(
+				"<tr class='rw t-" + feature.properties.village_name.replace(" ","_") + "' style='display:none;'>" +
+				"<td></td>" +
+				"<td>" + feature.properties.pkey + "</td>" +
+				"<td>"+feature.properties.level_name+"</td>" +
+				"<td>" + twitterCount + "</td>" +
+				"<td>" + detikCount + "</td>" +
+				"<td></td>" +
+				"</tr>"			
+			)
+		);
+	});
+	
 	// Store references to layers with each row
 	$("#table tr[id^=t]").each( function(i) {
 		var $row = $(this);
 		var id = $(this).attr('id');
 		var lid = id.substring(2, id.length);
 		$.each( outlineLayer._layers, function(i,layer) {
-			if ( layer.feature.properties.pkey === Number(lid) ) {
+			if ( layer.feature.properties.level_name.replace(" ","_") === lid ) {
 				$row.data( 'layer', layer );
 			}
 		});
