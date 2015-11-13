@@ -222,41 +222,21 @@ var loadAggregates = function(level, aggregates){
 /**
  * Load the outline polygons
  */
-var loadOutlines = function(outlines){
-	// FIXME single level of outlines
-	var newFeatures = [];
-	for (var i=0; i<outlines.features.length; i++) {
-		var nf = outlines.features[i];
-		var alreadySeen = false;
-		var oldFeature;
-		for (var i2=0; i2<i; i2++) {
-			var of = outlines.features[i2];
-			if (of.properties.pkey === nf.properties.pkey && of.properties.source !== nf.properties.source) {
-				alreadySeen = true;
-				oldFeature = of;
-			}
+var loadOutlines = function(outlines){	
+	// FIXME manipulate response for easy parsing
+	$.each( outlines.features, function(i,feature) {
+		var newCounts = {
+			total: 0
+		};
+		if (feature.properties.counts) {
+			$.each( feature.properties.counts, function(j, count) {
+				newCounts[count.source] = count.count;
+				newCounts.total += count.count;
+			});
 		}
-		if (!alreadySeen) {
-			if (nf.properties.source==='twitter') {
-				nf.properties.counts = {
-					twitter: nf.properties.count
-				};
-			} else {
-				nf.properties.counts = {
-					detik: nf.properties.count
-				};
-			}
-			newFeatures.push( nf );
-		} else {
-			if (nf.properties.source==='twitter') {
-				oldFeature.properties.counts.twitter = nf.properties.count;
-			} else {
-				oldFeature.properties.counts.detik = nf.properties.count;
-			}
-		}
-	}
-	outlines.features = newFeatures;
-	// FIXME single level of outlines
+		feature.properties.counts = newCounts;
+	});
+	// END FIXME
 	
 	outlineLayer = L.geoJson(outlines, {style:styleOutline, onEachFeature:labelOutlines});
 	populateTable(outlines, outlineLayer);
@@ -622,7 +602,7 @@ else {
 
 info.update = function(properties){
 
-		this._div.innerHTML = (properties ? properties.level_name+': '+properties.count+' '+reports_text : hover_text);
+		this._div.innerHTML = (properties ? properties.level_name+': '+properties.counts.total+' '+reports_text : hover_text);
 };
 
 /**
@@ -972,13 +952,15 @@ function populateTable(outlines, outlineLayer) {
 		
 	// Construct HTML for table view of the aggregate data
 	var html = "";
-	$.each( outlines.features, function( i, feature ) {
+	$.each( outlines.features, function( i, feature ) {		
+		var twitterCount = (feature.properties.counts && feature.properties.counts.twitter) ? feature.properties.counts.twitter : 0; 
+		var detikCount = (feature.properties.counts && feature.properties.counts.detik) ? feature.properties.counts.detik : 0; 
 		html += "<tr class='village' id='t-" + feature.properties.pkey + "'>";
 		html += "<td><a class='village-toggle' data-expanded=''>+</a></td>";
 		html += "<td>" + feature.properties.pkey + "</td>";
 		html += "<td>" + feature.properties.level_name + "</td>";
-		html += "<td>" + feature.properties.counts.twitter + "</td>";
-		html += "<td>" + feature.properties.counts.detik + "</td>";
+		html += "<td>" + twitterCount+ "</td>";
+		html += "<td>" + detikCount + "</td>";
 		html += "<td><a class='flooded-toggle'>Flooded</a></td>";
 		html += "</tr>";
 		
