@@ -110,7 +110,9 @@ module.exports = function(grunt) {
           { expand: true, flatten: true, src: "banjir/robots.txt", dest: "build/"}
         ]
       },
-      js: {
+      // Copy the un-minified JS files into the build directory for development
+      // TODO Is there a nicer way to do this where they're not called *.min.js?
+      devjs: {
     	  files: [
 	          {src: 'build/banjir/js/application.js', dest: 'build/banjir/js/application.min.js'},
 	          {src: "banjir/assets/js/analytics.js", dest: "build/banjir/js/analytics.min.js"},
@@ -130,7 +132,7 @@ module.exports = function(grunt) {
     watch: {
       js: {
         files: 'banjir/assets/js/**/*.js',
-        tasks: ['jshint', 'concat:js', 'copy:js']
+        tasks: ['jshint', 'concat:js', 'copy:devjs']
       },
       css: {
         files: 'banjir/assets/css/**/*.css',
@@ -178,6 +180,6 @@ module.exports = function(grunt) {
   grunt.registerTask('server', ['assets', 'site', 'concurrent:server']);
   grunt.registerTask('default', ['assets', 'site']);
   grunt.registerTask('docs', ['jsdoc:dist'])
-  grunt.registerTask('dev', ['copy:js'])
+  grunt.registerTask('dev', ['copy:devjs'])
 
 };

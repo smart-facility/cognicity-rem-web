@@ -223,32 +223,26 @@ var loadAggregates = function(level, aggregates){
  * Load the outline polygons
  */
 var loadOutlines = function(village, rw){	
-	// FIXME manipulate response for easy parsing
-	$.each( village.features, function(i,feature) {
-		var newCounts = {
-			total: 0
-		};
-		if (feature.properties.counts) {
-			$.each( feature.properties.counts, function(j, count) {
-				newCounts[count.source] = count.count;
-				newCounts.total += count.count;
-			});
-		}
-		feature.properties.counts = newCounts;
-	});
-	$.each( rw.features, function(i,feature) {
-		var newCounts = {
-			total: 0
-		};
-		if (feature.properties.counts) {
-			$.each( feature.properties.counts, function(j, count) {
-				newCounts[count.source] = count.count;
-				newCounts.total += count.count;
-			});
-		}
-		feature.properties.counts = newCounts;
-	});
-	// END FIXME
+	// Put counts in map with key as 'source'
+	// Add total counts
+	function updateCounts(features) {
+		$.each( features, function(i,feature) {
+			var newCounts = {
+				total: 0
+			};
+			if (feature.properties.counts) {
+				$.each( feature.properties.counts, function(j, count) {
+					newCounts[count.source] = count.count;
+					newCounts.total += count.count;
+				});
+			}
+			feature.properties.counts = newCounts;
+		});
+	}
+	
+	// Manipulate response for easy parsing into table view
+	updateCounts( village.features );
+	updateCounts( rw.features );
 	
 	outlineLayer = L.geoJson(village, {style:styleOutline, onEachFeature:labelOutlines});
 	populateTable(village, outlineLayer, rw);
@@ -312,10 +306,6 @@ function styleAggregates(feature) {
     return {
         fillColor: getColor(feature.properties.count),
         weight: 0,
-				//disabled polygon borders for clarity
-        //opacity: 1,
-        //color: 'white',
-        //dashArray: '3',
         fillOpacity: 0.7
     };
 }
@@ -374,19 +364,7 @@ function labelOutlines(feature, layer) {
 	});
 }
 
-var activeAggregate = null;
-
-/**
-	Visual highlighting of polygon when hovered over with the mouse
-
-	@param {object} event - leaflet event object
-*/
-function highlightAggregate(e) {
-	var layer = e.target;
-  
-	highlightTableRow( layer );  
-	highlightLayer( layer );
-}
+var activeAggregate;
 
 /**
 Visual highlighting of polygon when hovered over with the mouse
@@ -404,42 +382,12 @@ function highlightOutline(e) {
  * Highlight the layer
  * @param {object} layerElement Leaflet layer object
  */
-function highlightLayer(layerElement) {
-	// If we've got an already highlighted layer, unhighlight it
-	if (activeAggregate !== null) {
-		activeAggregate.setStyle(styleAggregates(activeAggregate.feature));
-		//activeAggregate.bringToBack();
-	}
-	
-	// Highlight the layer
-	layerElement.setStyle({
-		weight: 5,
-		color: '#333',
-		opacity:1,
-		dashArray: '',
-		fillOpacity: 0.7
-	});
-	
-	//layerElement.bringToFront(); //buggy?
-	
-	// Update the tooltip
-	info.update(layerElement.feature.properties);
-	  
-	// Retain which layer is highlighted
-	activeAggregate = layerElement;
-}
-
-/**
- * Highlight the layer
- * @param {object} layerElement Leaflet layer object
- */
 function highlightOutlineLayer(layerElement) {
 	// If we've got an already highlighted layer, unhighlight it
-	if (activeAggregate !== null) {
+	if ( activeAggregate ) {
 		activeAggregate.setStyle(styleOutline(activeAggregate.feature));
-		//activeAggregate.bringToBack();
 	}
-	
+
 	// Highlight the layer
 	layerElement.setStyle({
 		weight: 5,
@@ -448,8 +396,6 @@ function highlightOutlineLayer(layerElement) {
 		dashArray: '',
 		fillOpacity: 0.7
 	});
-	
-	//layerElement.bringToFront(); //buggy?
 	
 	// Update the tooltip
 	info.update(layerElement.feature.properties);
@@ -464,17 +410,16 @@ function highlightOutlineLayer(layerElement) {
  */
 function highlightTableRow(layerElement) {
 	// Find table row which corresponds to the layer
-	var $row = $('#t-'+layerElement.feature.properties.level_name.replace(" ","_"));
+	var $row = $('#t-'+levelNameToId(layerElement.feature.properties.level_name));
 	
 	if ($row.length===0) {
-		// FIXME Error handling?
+		// FIXME This should not happen. Verify that this won't occur, or handle the error if it does.
 		return;
 	}
 	
 	// If we have an active highlight, remove the highlight from the table row
-	if (activeAggregate !== null) {
-		var $highlightedRow = $('#t-'+activeAggregate.feature.properties.level_name.replace(" ","_"));
-		$highlightedRow.removeClass('highlighted');
+	if ( activeAggregate ) {
+		$('#t-'+levelNameToId(activeAggregate.feature.properties.level_name)).removeClass('highlighted');		
 	}
 	
 	// Highlight the table row
@@ -496,7 +441,6 @@ function resetAggregate(e){
 	var layer = e.target;
 
 	layer.setStyle(styleAggregates(layer.feature));
-	//layer.bringToBack();
 
 	info.update();
 }
@@ -510,7 +454,6 @@ function resetOutline(e){
 	var layer = e.target;
 	
 	layer.setStyle(styleOutline(layer.feature));
-	//layer.bringToBack();
 	
 	info.update();
 }
@@ -644,7 +587,6 @@ legend.onAdd = function(map) {
 		div.innerHTML += '<span class="number">'+grades[i]+'</span>';
 	}
 	div.innerHTML +='<span class="number" style="margin-left:1px;">'+grades[grades.length-1]+'+</span>';
-	//div.innerHTML +='+';
 
 	return div;
 };
@@ -687,7 +629,6 @@ var updateAggregateVisibility = function() {
 		hideAggregates();
 		if (map.hasLayer(window.confirmedPoints) === false){
 			aggregateLayers.village.addTo(map);
-			//aggregateLayers.village.bringToBack();
 		}
 		window.layerControl.addBaseLayer(aggregateLayers.village, layernames.village);
 
@@ -695,14 +636,12 @@ var updateAggregateVisibility = function() {
 		hideAggregates();
 		if (map.hasLayer(window.confirmedPoints) === false){
 			aggregateLayers.rw.addTo(map);
-			//aggregateLayers.rw.bringToBack();
 		}
 		window.layerControl.addBaseLayer(aggregateLayers.rw, layernames.neighbourhood);
 
 	}
 	
 	outlineLayer.bringToFront();
-	activeAggregate = null;
 };
 
 aggregatesControl.onAdd = function(map) {
@@ -847,7 +786,11 @@ if (document.documentElement.lang == 'in'){
 	layernames.floodgates = 'Floodgates';
 }
 
+/**
+ * Initial loading of layers.
+ */
 var loadPrimaryLayers = function(layerControl) {
+	// Load confirmed reports and both village and rw outlines.
 	var layerPromises = {
 		confirmed: getReports('confirmed')
 			.then(loadConfirmedPoints),
@@ -859,6 +802,7 @@ var loadPrimaryLayers = function(layerControl) {
 			})
 	};
 	
+	// Once all loaded, setup the map and controls.
 	return new RSVP.Promise(function(resolve, reject) {
 		RSVP.hash(layerPromises).then(function(overlays) {
 
@@ -887,6 +831,7 @@ var loadSecondaryLayers = function(layerControl) {
 				.then(function(floodgates){
 					return loadInfrastructure('floodgates', floodgates);
 				}),
+			// TODO These were already fetched for the primary layers can we cache the data for this call?
 			village: getAggregates('village')
 				.then(function(aggregates) {
 					return loadAggregates('village', aggregates);
@@ -936,10 +881,7 @@ $(function() {
 				aggregatesControl.addTo(map);
 				$('.control.aggregates button').prop('disabled', false);
 			}
-			//event.layer.bringToBack();
 		}
-//		updateAggregateVisibility();
-		//if (outlineLayer) outlineLayer.bringToFront();
 	});
 	
 	// Always show info box
@@ -958,8 +900,19 @@ map.on('popupopen', function(popup){
 });
 
 /**
+ * Transform a plain text level name into a string suitable for use as a DOM ID
+ * @param levelName Level name in plain text
+ * @returns Level name suitable for use as a DOM ID
+ */
+function levelNameToId(levelName) {
+	return levelName.replace(/ /g,"_");
+}
+
+/**
  * Fill the data in the table view from aggregate data
- * TODO
+ * @param {object} outlines The village aggregate data response from the server
+ * @param {object} outlineLayer The Leaflet LayerGroup for the outlines
+ * @param {object} rw The neighbourhood aggregate data response from the server
  */
 function populateTable(outlines, outlineLayer, rw) {
 		
@@ -968,10 +921,10 @@ function populateTable(outlines, outlineLayer, rw) {
 	$.each( outlines.features, function( i, feature ) {		
 		var twitterCount = (feature.properties.counts && feature.properties.counts.twitter) ? feature.properties.counts.twitter : 0; 
 		var detikCount = (feature.properties.counts && feature.properties.counts.detik) ? feature.properties.counts.detik : 0; 
-		html += "<tr class='village' id='t-" + feature.properties.level_name.replace(" ","_") + "'>";
+		html += "<tr class='village' id='t-" + levelNameToId(feature.properties.level_name) + "'>";
 		html += "<td><a class='village-toggle' data-expanded=''>+</a></td>";
 		html += "<td>" + feature.properties.pkey + "</td>";
-		html += "<td id='v-"+feature.properties.level_name.replace(" ","_")+"'>" + feature.properties.level_name + "</td>";
+		html += "<td id='v-"+levelNameToId(feature.properties.level_name)+"'>" + feature.properties.level_name + "</td>";
 		html += "<td>" + twitterCount+ "</td>";
 		html += "<td>" + detikCount + "</td>";
 		html += "<td><a class='flooded-toggle'>Flooded</a></td>";
@@ -979,13 +932,14 @@ function populateTable(outlines, outlineLayer, rw) {
 	});
 	$("#table table tbody").html( html );
 
+	// Construct HTML
 	var $tBody = $("#table table tbody");
 	$.each( rw.features, function(i, feature) {
 		var twitterCount = (feature.properties.counts && feature.properties.counts.twitter) ? feature.properties.counts.twitter : 0; 
 		var detikCount = (feature.properties.counts && feature.properties.counts.detik) ? feature.properties.counts.detik : 0; 
-		$('#v-'+feature.properties.village_name.replace(" ","_"), $tBody).closest('tr').after(
+		$('#v-'+levelNameToId(feature.properties.village_name), $tBody).closest('tr').after(
 			$(
-				"<tr class='rw t-" + feature.properties.village_name.replace(" ","_") + "' style='display:none;'>" +
+				"<tr class='rw t-" + levelNameToId(feature.properties.village_name) + "' style='display:none;'>" +
 				"<td></td>" +
 				"<td>" + feature.properties.pkey + "</td>" +
 				"<td>"+feature.properties.level_name+"</td>" +
@@ -1002,26 +956,32 @@ function populateTable(outlines, outlineLayer, rw) {
 		var $row = $(this);
 		var id = $(this).attr('id');
 		var lid = id.substring(2, id.length);
+		// TODO Is there a better way to access the layers?
 		$.each( outlineLayer._layers, function(i,layer) {
-			if ( layer.feature.properties.level_name.replace(" ","_") === lid ) {
+			if ( levelNameToId(layer.feature.properties.level_name) === lid ) {
 				$row.data( 'layer', layer );
 			}
 		});
 		updateFloodedOutlineLayer($row);
-		// TODO Neighbourhood layers
+		
+		// TODO Will we render neighbourhood layers?
 	});
 	
 	// When hovering over a table row, highlight the row and the corresponding layer
 	$("#table tr[id^=t]").on('mouseover', function() {
+		// Remove all highlights
+		$("#table tr.highlighted").removeClass('highlighted');
 		var layer = $(this).data('layer');
 		if (!layer || !layer._map) {
-			// FIXME error handling?
+			// TODO This probably should not occur. Verify that it shouldn't happen and either
+			// remove this return, or handle the error if it could occur.
 			return;
 		} 
 		highlightOutlineLayer( layer );
 		$(this).addClass('highlighted');
 	}).on('mouseout', function() {
-		$(this).removeClass('highlighted');
+		// Remove all highlights
+		$("#table tr.highlighted").removeClass('highlighted');
 	});
 	
 	// Expand/collapse the neighbourhood data rows for the village
@@ -1039,17 +999,21 @@ function populateTable(outlines, outlineLayer, rw) {
 		}
 	});
 	
+	// Change the flooded state of the row
+	// Update the state internally and push the change to the server
 	function toggleFloodedState($row) {
 		var layer = $row.data('layer');
 
 		if (layer.feature.properties.flooded) {
 			layer.feature.properties.flooded = false;
+			// TODO Error handling on this AJAX request
 			$.ajax('/banjir/data/api/v2/rem/flooded/'+layer.feature.properties.pkey, {
 				method: 'PUT',
 				data: 'flooded=false'
 			});
 		} else {
 			layer.feature.properties.flooded = true;
+			// TODO Error handling on this AJAX request
 			$.ajax('/banjir/data/api/v2/rem/flooded/'+layer.feature.properties.pkey, {
 				method: 'PUT',
 				data: 'flooded=true' 
@@ -1057,6 +1021,7 @@ function populateTable(outlines, outlineLayer, rw) {
 		}
 	}
 	
+	// Update the rendering of the flooded state of the outline associate with the row
 	function updateFloodedOutlineLayer($row) {
 		var $toggle = $('.flooded-toggle', $row);
 		var layer = $row.data('layer');
