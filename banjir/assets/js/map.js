@@ -937,9 +937,9 @@ function populateTable(outlines, outlineLayer, rw) {
 	$.each( rw.features, function(i, feature) {
 		var twitterCount = (feature.properties.counts && feature.properties.counts.twitter) ? feature.properties.counts.twitter : 0; 
 		var detikCount = (feature.properties.counts && feature.properties.counts.detik) ? feature.properties.counts.detik : 0; 
-		$('#v-'+levelNameToId(feature.properties.village_name), $tBody).closest('tr').after(
+		$('#v-'+levelNameToId(feature.properties.parent_name), $tBody).closest('tr').after(
 			$(
-				"<tr class='rw t-" + levelNameToId(feature.properties.village_name) + "' style='display:none;'>" +
+				"<tr class='rw t-" + levelNameToId(feature.properties.parent_name) + "' style='display:none;'>" +
 				"<td></td>" +
 				"<td>" + feature.properties.pkey + "</td>" +
 				"<td>"+feature.properties.level_name+"</td>" +
