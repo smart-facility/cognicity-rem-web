@@ -237,6 +237,10 @@ var loadOutlines = function(village, rw){
 				});
 			}
 			feature.properties.counts = newCounts;
+			
+			if (!feature.properties.state) {
+				feature.properties.state = 0;
+			}
 		});
 	}
 	
@@ -318,11 +322,23 @@ Styles outline polygons
 function styleOutline(feature) {
 	var style = {
 		weight: 0,
-		fillOpacity: 0.5,
-		fillColor: 'transparent'
+		fillOpacity: 0.5
 	};
-	if (feature.properties.flooded) {
-		style.fillColor = '#00f';
+	// Set layer fill colour based on state
+	if (feature.properties.state === 0) {
+		style.fillColor = 'transparent';
+	} else if (feature.properties.state === 1) {
+		// Use caution
+		style.fillColor = '#FFFB68';
+	} else if (feature.properties.state === 2) {
+		// >0cm
+		style.fillColor = '#B2DFF2';				
+	} else if (feature.properties.state === 3) {
+		// >70cm
+		style.fillColor = '#56B8F9';		
+	} else if (feature.properties.state === 4) {
+		// >140cm
+		style.fillColor = '#3A8BAC';		
 	}
 	return style;
 }
@@ -927,7 +943,13 @@ function populateTable(outlines, outlineLayer, rw) {
 		html += "<td id='v-"+levelNameToId(feature.properties.level_name)+"'>" + feature.properties.level_name + "</td>";
 		html += "<td>" + twitterCount+ "</td>";
 		html += "<td>" + detikCount + "</td>";
-		html += "<td><a class='flooded-toggle'>Flooded</a></td>";
+		html += "<td><select class='flooded-state'>";
+		html += "<option value='0'>Not set</option>";
+		html += "<option value='1'>Use caution</option>";
+		html += "<option value='2'>&gt;0cm</option>";
+		html += "<option value='3'>&gt;70cm</option>";
+		html += "<option value='4'>&gt;140cm</option>";
+		html += "</select></td>";
 		html += "</tr>";		
 	});
 	$("#table table tbody").html( html );
@@ -1001,46 +1023,35 @@ function populateTable(outlines, outlineLayer, rw) {
 	
 	// Change the flooded state of the row
 	// Update the state internally and push the change to the server
-	function toggleFloodedState($row) {
-		var layer = $row.data('layer');
-
-		if (layer.feature.properties.flooded) {
-			layer.feature.properties.flooded = false;
-			// TODO Error handling on this AJAX request
-			$.ajax('/banjir/data/api/v2/rem/flooded/'+layer.feature.properties.pkey, {
-				method: 'PUT',
-				data: 'flooded=false'
-			});
-		} else {
-			layer.feature.properties.flooded = true;
-			// TODO Error handling on this AJAX request
-			$.ajax('/banjir/data/api/v2/rem/flooded/'+layer.feature.properties.pkey, {
-				method: 'PUT',
-				data: 'flooded=true' 
-			});
-		}
-	}
-	
-	// Update the rendering of the flooded state of the outline associate with the row
-	function updateFloodedOutlineLayer($row) {
-		var $toggle = $('.flooded-toggle', $row);
+	function updateFloodedState($row) {
 		var layer = $row.data('layer');
 		
-		if (layer.feature.properties.flooded) {
-			$toggle.addClass('flooded');
-		} else {
-			$toggle.removeClass('flooded');
+		$.ajax('/banjir/data/api/v2/rem/flooded/'+layer.feature.properties.pkey, {
+			method: 'PUT',
+			data: 'state='+layer.feature.properties.state
+		});
+	}
+	
+	function updateFloodedOutlineLayer($row) {
+		var layer = $row.data('layer');
+		var $select = $('.flooded-state', $row);
+		
+		if ( $select.val() !== layer.feature.properties.state ) {
+			$select.val(layer.feature.properties.state);
 		}
+		
 		updateOutline(layer);
 	}
 	
-	// Handle the 'Flooded' toggle button
-	$('.flooded-toggle').on('click', function() {
-		var $toggleButton = $(this);
-		var $row = $toggleButton.closest('tr');
+	// Handle the 'Flooded' state dropdown
+	$('.flooded-state').on('change', function() {
+		var $select = $(this);
+		var $row = $select.closest('tr');
 		var layer = $row.data('layer');
 		
-		toggleFloodedState($row);
+		layer.feature.properties.state = parseInt($select.val());
+		
+		updateFloodedState($row);
 		updateFloodedOutlineLayer($row);
 	});
 	

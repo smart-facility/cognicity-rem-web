@@ -68,16 +68,8 @@ body {
     font-size: 14px;
 }
 
-#table table .village .flooded-toggle {
-    border: 1px solid #acf;
+#table table .village .flooded-state {
     font-size: 12px;
-    padding: 1px 5px;
-    cursor: pointer;
-    background-color: #fff;
-}
-
-#table table .village .flooded-toggle.flooded {
-    background-color: #cef;
 }
 
 #table table .rw {
