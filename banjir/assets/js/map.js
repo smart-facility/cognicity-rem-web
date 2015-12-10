@@ -131,6 +131,8 @@ var getReport = function(id) {
 };
 
 var aggregateHours = 1;
+// TODO Edit mode temporary fix
+var editMode = true;
 
 /**
 	Get GeoJSON representing counts of reports in RW polygons
@@ -139,7 +141,11 @@ var aggregateHours = 1;
 */
 var getAggregates = function(level) {
 	return new RSVP.Promise(function(resolve, reject) {
-		jQuery.getJSON('/banjir/data/api/v2/aggregates/live?format=topojson&level='+level+'&hours='+aggregateHours, function(data) {
+		jQuery.getJSON('/banjir/data/api/v2/aggregates/live?format=topojson&level='+level+'&hours='+aggregateHours, function(data, textStatus, jqXHR) {
+			// TODO Edit mode temporary fix
+			if ( jqXHR.getResponseHeader('REM-editor') === 'false' ) {
+				editMode = false;
+			}
 			resolve(topojson.feature(data, data.objects.collection));
 		});
 	});
@@ -943,13 +949,18 @@ function populateTable(outlines, outlineLayer, rw) {
 		html += "<td id='v-"+levelNameToId(feature.properties.level_name)+"'>" + feature.properties.level_name + "</td>";
 		html += "<td>" + twitterCount+ "</td>";
 		html += "<td>" + detikCount + "</td>";
-		html += "<td><select class='flooded-state'>";
-		html += "<option value='0'>Not set</option>";
-		html += "<option value='1'>Use caution</option>";
-		html += "<option value='2'>&gt;0cm</option>";
-		html += "<option value='3'>&gt;70cm</option>";
-		html += "<option value='4'>&gt;140cm</option>";
-		html += "</select></td>";
+		html += "<td>";
+		// TODO Edit mode temporary fix
+		if (editMode) {
+			html += "<select class='flooded-state'>";
+			html += "<option value='0'>Not set</option>";
+			html += "<option value='1'>Use caution</option>";
+			html += "<option value='2'>&gt;0cm</option>";
+			html += "<option value='3'>&gt;70cm</option>";
+			html += "<option value='4'>&gt;140cm</option>";
+			html += "</select>";
+		}
+		html += "</td>";
 		html += "</tr>";		
 	});
 	$("#table table tbody").html( html );
