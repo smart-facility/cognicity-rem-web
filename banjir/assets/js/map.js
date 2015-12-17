@@ -151,6 +151,14 @@ var getAggregates = function(level) {
 	});
 };
 
+var getDimsStates = function() {
+	return new RSVP.Promise(function(resolve, reject) {
+		jQuery.getJSON('/banjir/data/api/v2/rem/dims?format=topojson', function(data, textStatus, jqXHR) {
+			resolve(topojson.feature(data, data.objects.collection));
+		});
+	});
+};
+
 /**
 	Plots confirmed points on the map as circular markers
 	@param {object} reports - a GeoJSON object containing report locations
@@ -228,7 +236,7 @@ var loadAggregates = function(level, aggregates){
 /**
  * Load the outline polygons
  */
-var loadOutlines = function(village, rw){	
+var loadOutlines = function(village, rw, dimsStates){	
 	// Put counts in map with key as 'source'
 	// Add total counts
 	function updateCounts(features) {
@@ -254,8 +262,8 @@ var loadOutlines = function(village, rw){
 	updateCounts( village.features );
 	updateCounts( rw.features );
 	
-	outlineLayer = L.geoJson(village, {style:styleOutline, onEachFeature:labelOutlines});
-	populateTable(village, outlineLayer, rw);
+	outlineLayer = L.geoJson(rw, {style:styleOutline, onEachFeature:labelOutlines});
+	populateTable(village, outlineLayer, rw, dimsStates);
 	return outlineLayer;
 };
 
@@ -813,24 +821,33 @@ if (document.documentElement.lang == 'in'){
  */
 var loadPrimaryLayers = function(layerControl) {
 	// Load confirmed reports and both village and rw outlines.
+//	var layerPromises = {
+//		confirmed: getReports('confirmed')
+//			.then(loadConfirmedPoints),
+//		outlines: getAggregates('village')
+//			.then(function(village) {
+//				return getAggregates('rw').then( function(rw) {
+//					return loadOutlines(village, rw);
+//				});
+//			})
+//	};
 	var layerPromises = {
-		confirmed: getReports('confirmed')
-			.then(loadConfirmedPoints),
-		outlines: getAggregates('village')
-			.then(function(village) {
-				return getAggregates('rw').then( function(rw) {
-					return loadOutlines(village, rw);
-				});
-			})
-	};
+			confirmed: getReports('confirmed')
+				.then(loadConfirmedPoints),
+			village: getAggregates('village'),
+			rw: getAggregates('rw'),
+			states: getDimsStates()
+		};
 	
 	// Once all loaded, setup the map and controls.
 	return new RSVP.Promise(function(resolve, reject) {
 		RSVP.hash(layerPromises).then(function(overlays) {
+			var outlines = loadOutlines(overlays.village, overlays.rw, overlays.states);
+//			var outlines = loadOutlines(overlays.village, overlays.rw);
 
 			layerControl.addBaseLayer(overlays.confirmed, layernames.confirmed);
 			overlays.confirmed.addTo(map);
-			overlays.outlines.addTo(map);
+			outlines.addTo(map);
 			map.spin(false);
 
 			resolve(layerControl);
@@ -935,20 +952,42 @@ function levelNameToId(levelName) {
  * @param {object} outlines The village aggregate data response from the server
  * @param {object} outlineLayer The Leaflet LayerGroup for the outlines
  * @param {object} rw The neighbourhood aggregate data response from the server
+ * @param {object} dimsStates The DIMS state data
  */
-function populateTable(outlines, outlineLayer, rw) {
+function populateTable(outlines, outlineLayer, rw, dimsStates) {
 		
-	// Construct HTML for table view of the aggregate data
+	// TODO Make the 'counts' columns automatically generated based on the incoming data
+	// I.e., headers and columns are NOT hardcoded in the map.hbs and this file
+	
+	// Construct HTML for village rows
 	var html = "";
 	$.each( outlines.features, function( i, feature ) {		
 		var twitterCount = (feature.properties.counts && feature.properties.counts.twitter) ? feature.properties.counts.twitter : 0; 
 		var detikCount = (feature.properties.counts && feature.properties.counts.detik) ? feature.properties.counts.detik : 0; 
-		html += "<tr class='village' id='t-" + levelNameToId(feature.properties.level_name) + "'>";
+		html += "<tr class='village' id='table_village_" + levelNameToId(feature.properties.level_name) + "' data-level_name='" + feature.properties.level_name + "'>";
 		html += "<td><a class='village-toggle' data-expanded=''>+</a></td>";
 		html += "<td>" + feature.properties.pkey + "</td>";
-		html += "<td id='v-"+levelNameToId(feature.properties.level_name)+"'>" + feature.properties.level_name + "</td>";
+		html += "<td>" + feature.properties.level_name + "</td>";
 		html += "<td>" + twitterCount+ "</td>";
 		html += "<td>" + detikCount + "</td>";
+		html += "<td></td>";
+		html += "<td></td>";
+		html += "</tr>";		
+	});
+	$("#table table tbody").html( html );
+
+	// Construct HTML for neighbourhood rows
+	var $tBody = $("#table table tbody");
+	$.each( rw.features, function(i, feature) {
+		var twitterCount = (feature.properties.counts && feature.properties.counts.twitter) ? feature.properties.counts.twitter : 0; 
+		var detikCount = (feature.properties.counts && feature.properties.counts.detik) ? feature.properties.counts.detik : 0;
+		var html = "<tr id='table_rw_" + feature.properties.pkey + "' data-pkey='" + feature.properties.pkey + "' class='rw table_village_" + levelNameToId(feature.properties.parent_name) + "' style='display:none;'>";
+		html += "<td></td>";
+		html += "<td>" + feature.properties.pkey + "</td>";
+		html += "<td>"+feature.properties.level_name+"</td>";
+		html += "<td>" + twitterCount + "</td>";
+		html += "<td>" + detikCount + "</td>";
+		html += "<td class='dimsStatus'></td>";
 		html += "<td>";
 		// TODO Edit mode temporary fix
 		if (editMode) {
@@ -962,46 +1001,28 @@ function populateTable(outlines, outlineLayer, rw) {
 		}
 		html += "</td>";
 		html += "</tr>";		
-	});
-	$("#table table tbody").html( html );
 
-	// Construct HTML
-	var $tBody = $("#table table tbody");
-	$.each( rw.features, function(i, feature) {
-		var twitterCount = (feature.properties.counts && feature.properties.counts.twitter) ? feature.properties.counts.twitter : 0; 
-		var detikCount = (feature.properties.counts && feature.properties.counts.detik) ? feature.properties.counts.detik : 0; 
-		$('#v-'+levelNameToId(feature.properties.parent_name), $tBody).closest('tr').after(
-			$(
-				"<tr class='rw t-" + levelNameToId(feature.properties.parent_name) + "' style='display:none;'>" +
-				"<td></td>" +
-				"<td>" + feature.properties.pkey + "</td>" +
-				"<td>"+feature.properties.level_name+"</td>" +
-				"<td>" + twitterCount + "</td>" +
-				"<td>" + detikCount + "</td>" +
-				"<td></td>" +
-				"</tr>"			
-			)
-		);
+		$('#table_village_'+levelNameToId(feature.properties.parent_name), $tBody).after( $(html) );
+	});
+	
+	$.each( dimsStates.features, function(i, feature) {
+		$("#table_rw_"+feature.properties.pkey+" .dimsStatus").html( feature.properties.level );
 	});
 	
 	// Store references to layers with each row
-	$("#table tr[id^=t]").each( function(i) {
+	$("#table tr[id^=table_rw_]").each( function(i) {
 		var $row = $(this);
-		var id = $(this).attr('id');
-		var lid = id.substring(2, id.length);
 		// TODO Is there a better way to access the layers?
 		$.each( outlineLayer._layers, function(i,layer) {
-			if ( levelNameToId(layer.feature.properties.level_name) === lid ) {
+			if ( layer.feature.properties.pkey === $row.data('pkey') ) {
 				$row.data( 'layer', layer );
 			}
 		});
 		updateFloodedOutlineLayer($row);
-		
-		// TODO Will we render neighbourhood layers?
 	});
 	
 	// When hovering over a table row, highlight the row and the corresponding layer
-	$("#table tr[id^=t]").on('mouseover', function() {
+	$("#table tr[id^=table_rw_]").on('mouseover', function() {
 		// Remove all highlights
 		$("#table tr.highlighted").removeClass('highlighted');
 		var layer = $(this).data('layer');
