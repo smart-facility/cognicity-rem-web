@@ -214,26 +214,6 @@ var showURLReport = function() {
 };
 
 /**
-	Plots counts of reports in RW polygons
-
-	@param {string} level - string - administrative boundary level to load. Can be 'rw' or 'village', should be passed from getfunction
-	@param {object} aggregates - a GeoJSON object containing polygon features
-*/
-
-var aggregateLayers = {};
-var aggregateVersions = {};
-var aggregateInc = 0;
-
-var loadAggregates = function(level, aggregates){
-	var aggregateLayer = L.geoJson(aggregates, {style:styleAggregates});
-	aggregateLayers[level] = aggregateLayer;
-	aggregateLayers[level].version = aggregateInc;
-  aggregateVersions[level] = aggregateInc;
-  aggregateInc += 1;
-	return aggregateLayers[level];
-};
-
-/**
  * Load the outline polygons
  */
 var loadOutlines = function(village, rw, dimsStates){
@@ -314,19 +294,6 @@ var styleInfrastructure = {
 		popupAnchor: [0, 0],
 	})
 };
-
-/**
-	Styles counts of reports in RW polygons
-
-	@param {object} feature - individual Leaflet/GeoJSON feature object
-	*/
-function styleAggregates(feature) {
-    return {
-        fillColor: getColor(feature.properties.count),
-        weight: 0,
-        fillOpacity: 0.7
-    };
-}
 
 /**
 Styles outline polygons
@@ -441,8 +408,7 @@ function highlightOutlineLayer(layerElement) {
  */
 function highlightTableRow(layerElement) {
 	// Find table row which corresponds to the layer
-	var $row = $('#t-'+levelNameToId(layerElement.feature.properties.level_name));
-
+	var $row = $('#table_rw_'+levelNameToId(layerElement.feature.properties.parent_name));
 	if ($row.length===0) {
 		// FIXME This should not happen. Verify that this won't occur, or handle the error if it does.
 		return;
@@ -454,26 +420,14 @@ function highlightTableRow(layerElement) {
 	}
 
 	// Highlight the table row
-	$row.addClass('highlighted');
+	//$row.addClass('highlighted');
+	$('#table_village_ANCOL').addClass('highlighted');
 
 	// Scroll the table view to the highlighted item
 	var rowTop = $row.offset().top;
 	var $table = $("#table");
 	var tableTop = $table.offset().top;
 	$table.scrollTop( $table.scrollTop()  + rowTop - tableTop);
-}
-
-/**
-	Reset style of aggregate after hover over
-
-	@param {object} event - leaflet event object
-*/
-function resetAggregate(e){
-	var layer = e.target;
-
-	layer.setStyle(styleAggregates(layer.feature));
-
-	info.update();
 }
 
 /**
@@ -511,27 +465,6 @@ var centreMapOnPopup = function(pkey,lat,lon) {
 	var m = markerMap[pkey];
 	map.setView(m._latlng, 17);
 	m.openPopup();
-};
-
-/**
-	Center the map on the user's location if they're in jakarta & add a pin to show location
-	See http://leafletjs.com/examples/mobile.html for reference implementation.
-
-	@param {Position} position - the user's position as provided by client browser
-*/
-var setViewJakarta = function(position) {
-	if (position.coords.latitude >= -6.4354 && position.coords.latitude <= -5.9029 &&
-		  position.coords.longitude >= 106.5894 && position.coords.longitude <= 107.0782) {
-				map.setView(L.latLng(position.coords.latitude,position.coords.longitude), 17); // Set to the users current view
-
-				//Remove existing marker if present
-				if (window.bluedot){
-					map.removeLayer(window.bluedot);
-				}
-				// Add new marker
-				window.bluedot = L.marker([position.coords.latitude,position.coords.longitude]);
-				window.bluedot.addTo(map);
-	}
 };
 
 // Create timestamp control
@@ -587,130 +520,7 @@ else {
 }
 
 info.update = function(properties){
-
-		this._div.innerHTML = (properties ? properties.level_name+': '+properties.counts.total+' '+reports_text : hover_text);
-};
-
-/**
-	Legend box
-*/
-var legend = L.control({position:'bottomright'});
-
-legend.onAdd = function(map) {
-
-	var div = L.DomUtil.create('div', 'info legend'),
-	grades = [0,1, 5, 10, 15, 20, 25, 30],
-	labels = [];
-  // label for legend
-	if (document.documentElement.lang == 'in') {
-		div.innerHTML+='Jumlah laporan<BR>';
-	}
-	else {
-		div.innerHTML+='Number of reports<BR>';
-	}
-	// loop through density intervals and generate label with coloured square
-	for (var i=0; i <grades.length; i++) {
-		div.innerHTML += '<i class="color" style="background:'+getColor(grades[i]+1) + '"></i>';
-	}
-  div.innerHTML += '<br>';
-	// loop through density intervals and generate label with coloured square
-	for (i=0; i <grades.length-1; i++) {
-		div.innerHTML += '<span class="number">'+grades[i]+'</span>';
-	}
-	div.innerHTML +='<span class="number" style="margin-left:1px;">'+grades[grades.length-1]+'+</span>';
-
-	return div;
-};
-
-var aggregatesControl = L.control({position:'bottomright'});
-
-var hideAggregates = function() {
-  if (aggregateLayers) {
-    if (aggregateLayers.village) {
-      map.removeLayer(aggregateLayers.village);
-      window.layerControl.removeLayer(aggregateLayers.village);
-    }
-    if (aggregateLayers.rw) {
-      map.removeLayer(aggregateLayers.rw);
-      window.layerControl.removeLayer(aggregateLayers.rw);
-    }
-  }
-};
-
-var reloadAggregates = function() {
-  var promises = {
-    village: getAggregates('village')
-				.then(function(aggregates) {
-					return loadAggregates('village', aggregates);
-				}),
-    rw: getAggregates('rw')
-				.then(function(aggregates) {
-					return loadAggregates('rw', aggregates);
-				})
-  };
-
-  return RSVP.hash(promises);
-};
-
-// Turn layers on/off depending on zoom level
-var updateAggregateVisibility = function() {
-	var zoom  = map.getZoom();
-
-	if (zoom <= 14) {
-		hideAggregates();
-		if (map.hasLayer(window.confirmedPoints) === false){
-			aggregateLayers.village.addTo(map);
-		}
-		window.layerControl.addBaseLayer(aggregateLayers.village, layernames.village);
-
-	} else if (zoom >= 15) {
-		hideAggregates();
-		if (map.hasLayer(window.confirmedPoints) === false){
-			aggregateLayers.rw.addTo(map);
-		}
-		window.layerControl.addBaseLayer(aggregateLayers.rw, layernames.neighbourhood);
-
-	}
-
-	outlineLayer.bringToFront();
-};
-
-aggregatesControl.onAdd = function(map) {
-	var div = L.DomUtil.create('div', 'info control aggregates');
-
-  var buttonGroup = L.DomUtil.create('div', 'btn-group', div);
-  var buttons = [];
-	var labels = [];
-	if (document.documentElement.lang == 'in'){
-		labels = ['1 jam', '3 jam', '6 jam'];
-	}
-	else {
-  	labels = ['1hr', '3hrs', '6hrs'];
-	}
-  var values = [1, 3, 6];
-
-  var clickCallback = function() {
-    $('.control.aggregates button.active').removeClass('active');
-    this.className += " active";
-    aggregateHours = parseInt(this.getAttribute('value'), 10);
-		map.spin(true);
-    hideAggregates();
-    reloadAggregates().then(function() {
-      updateAggregateVisibility();
-			map.spin(false);
-    });
-  };
-
-  for (var i = 0; i < 3; i++) {
-    buttons[i] = L.DomUtil.create('button', 'btn btn-default', buttonGroup);
-    buttons[i].setAttribute('value', values[i]);
-    buttons[i].setAttribute('disabled', true);
-    buttons[i].textContent = labels[i];
-    buttons[i].addEventListener("click", clickCallback);
-  }
-  L.DomUtil.addClass(buttons[Math.round(aggregateHours/3)], 'active');
-
-  return div;
+		this._div.innerHTML = (properties ? properties.parent_name+', '+properties.level_name : hover_text);
 };
 
 var reportsControl = L.control({position:'bottomleft'});
@@ -740,36 +550,17 @@ infoControl.onAdd = function(map) {
   return div;
 };
 
-var locationControl = L.control({position:'bottomleft'});
-
-locationControl.onAdd = function(map){
-	var div = L.DomUtil.create('div', 'leaflet-control');
-	var locationLink = L.DomUtil.create('a', 'leaflet-control-location-button', div);
-	locationLink.textContent = 'Current Location';
-	locationLink.setAttribute('href', '#');
-	locationLink.setAttribute('onclick', 'navigator.geolocation.getCurrentPosition(setViewJakarta); return false;');
-
-	return div;
-};
-
 //Initialise map
 var latlon = new L.LatLng(-6.1924, 106.8317); //Centre Jakarta
-var map = L.map('map').setView(latlon, 12); // Initialise map
+var map = L.map('map').setView(latlon, 11); // Initialise map
 map.attributionControl.setPrefix('');
 
 //Specify default image path for Leaflet
 L.Icon.Default.imagePath = '/banjir/css/images/';
 
-//Check user location and alter map view accordingly
-map.locate({setView:false});
-if ('geolocation' in navigator && window.isTouch) {
-	navigator.geolocation.getCurrentPosition(setViewJakarta);
-}
-
 // Reports control
 infoControl.addTo(map);
 reportsControl.addTo(map);
-locationControl.addTo(map);
 
 // Basemap - check for HD/Retina display
 // See: http://www.robertprice.co.uk/robblog/2011/05/detecting_retina_displays_from_javascript_and_css-shtml/
@@ -870,16 +661,16 @@ var loadSecondaryLayers = function(layerControl) {
 			floodgates: getInfrastructure('floodgates')
 				.then(function(floodgates){
 					return loadInfrastructure('floodgates', floodgates);
-				}),
+				})
 			// TODO These were already fetched for the primary layers can we cache the data for this call?
-			village: getAggregates('village')
+			/*village: getAggregates('village')
 				.then(function(aggregates) {
 					return loadAggregates('village', aggregates);
 				}),
 			rw: getAggregates('rw')
 				.then(function(aggregates) {
 					return loadAggregates('rw', aggregates);
-				})
+				})*/
 		};
 
 		RSVP.hash(secondaryPromises).then(function(overlays) {
@@ -897,32 +688,6 @@ $(function() {
 	map.spin(true);
 	window.layerControl = L.control.layers({}, {}, {position: 'bottomleft'}).addTo(map);
 	loadPrimaryLayers(window.layerControl).then(loadSecondaryLayers);
-
-	//Update aggregates by zoom level
-	map.on('zoomend', function(){
-		updateAggregateVisibility();
-	});
-
-	//Toggle Aggregate legend
-	map.on('baselayerchange', function(event){
-		if (event.layer == window.confirmedPoints){
-			if (legend._map){
-				map.removeControl(legend);
-			}
-			if (aggregatesControl._map){
-				map.removeControl(aggregatesControl);
-			}
-		} else {
-			//Update legend boxes
-			if (!legend._map){
-				legend.addTo(map);
-			}
-			if (!aggregatesControl._map){
-				aggregatesControl.addTo(map);
-				$('.control.aggregates button').prop('disabled', false);
-			}
-		}
-	});
 
 	// Always show info box
 	info.addTo(map);
@@ -977,6 +742,7 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 	});
 	$("#table table tbody").html( html );
 
+
 	// Construct HTML for neighbourhood rows
 	var $tBody = $("#table table tbody");
 	$.each( rw.features.reverse(), function(i, feature) {
@@ -1004,6 +770,7 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 		html += "</tr>";
 
 		$('#table_village_'+levelNameToId(feature.properties.parent_name), $tBody).after( $(html) );
+
 	});
 
 	$.each( dimsStates.features, function(i, feature) {
