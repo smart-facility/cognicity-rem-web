@@ -236,7 +236,7 @@ var loadAggregates = function(level, aggregates){
 /**
  * Load the outline polygons
  */
-var loadOutlines = function(village, rw, dimsStates){	
+var loadOutlines = function(village, rw, dimsStates){
 	// Put counts in map with key as 'source'
 	// Add total counts
 	function updateCounts(features) {
@@ -251,17 +251,17 @@ var loadOutlines = function(village, rw, dimsStates){
 				});
 			}
 			feature.properties.counts = newCounts;
-			
+
 			if (!feature.properties.state) {
 				feature.properties.state = 0;
 			}
 		});
 	}
-	
+
 	// Manipulate response for easy parsing into table view
 	updateCounts( village.features );
 	updateCounts( rw.features );
-	
+
 	outlineLayer = L.geoJson(rw, {style:styleOutline, onEachFeature:labelOutlines});
 	populateTable(village, outlineLayer, rw, dimsStates);
 	return outlineLayer;
@@ -335,7 +335,8 @@ Styles outline polygons
 */
 function styleOutline(feature) {
 	var style = {
-		weight: 0,
+		weight: 0.5,
+		color: 'black',
 		fillOpacity: 0.5
 	};
 	// Set layer fill colour based on state
@@ -346,13 +347,13 @@ function styleOutline(feature) {
 		style.fillColor = '#FFFB68';
 	} else if (feature.properties.state === 2) {
 		// >0cm
-		style.fillColor = '#B2DFF2';				
+		style.fillColor = '#B2DFF2';
 	} else if (feature.properties.state === 3) {
 		// >70cm
-		style.fillColor = '#56B8F9';		
+		style.fillColor = '#56B8F9';
 	} else if (feature.properties.state === 4) {
 		// >140cm
-		style.fillColor = '#3A8BAC';		
+		style.fillColor = '#3A8BAC';
 	}
 	return style;
 }
@@ -403,8 +404,8 @@ Visual highlighting of polygon when hovered over with the mouse
 */
 function highlightOutline(e) {
 	var layer = e.target;
-	
-	highlightTableRow( layer );  
+
+	highlightTableRow( layer );
 	highlightOutlineLayer( layer );
 }
 
@@ -420,16 +421,16 @@ function highlightOutlineLayer(layerElement) {
 
 	// Highlight the layer
 	layerElement.setStyle({
-		weight: 5,
-		color: '#333',
+		weight: 3,
+		color: 'red',
 		opacity:1,
 		dashArray: '',
 		fillOpacity: 0.7
 	});
-	
+
 	// Update the tooltip
 	info.update(layerElement.feature.properties);
-	  
+
 	// Retain which layer is highlighted
 	activeAggregate = layerElement;
 }
@@ -441,20 +442,20 @@ function highlightOutlineLayer(layerElement) {
 function highlightTableRow(layerElement) {
 	// Find table row which corresponds to the layer
 	var $row = $('#t-'+levelNameToId(layerElement.feature.properties.level_name));
-	
+
 	if ($row.length===0) {
 		// FIXME This should not happen. Verify that this won't occur, or handle the error if it does.
 		return;
 	}
-	
+
 	// If we have an active highlight, remove the highlight from the table row
 	if ( activeAggregate ) {
-		$('#t-'+levelNameToId(activeAggregate.feature.properties.level_name)).removeClass('highlighted');		
+		$('#t-'+levelNameToId(activeAggregate.feature.properties.level_name)).removeClass('highlighted');
 	}
-	
+
 	// Highlight the table row
 	$row.addClass('highlighted');
-	
+
 	// Scroll the table view to the highlighted item
 	var rowTop = $row.offset().top;
 	var $table = $("#table");
@@ -482,9 +483,9 @@ Reset style of aggregate after hover over
 */
 function resetOutline(e){
 	var layer = e.target;
-	
+
 	layer.setStyle(styleOutline(layer.feature));
-	
+
 	info.update();
 }
 
@@ -670,7 +671,7 @@ var updateAggregateVisibility = function() {
 		window.layerControl.addBaseLayer(aggregateLayers.rw, layernames.neighbourhood);
 
 	}
-	
+
 	outlineLayer.bringToFront();
 };
 
@@ -838,7 +839,7 @@ var loadPrimaryLayers = function(layerControl) {
 			rw: getAggregates('rw'),
 			states: getDimsStates()
 		};
-	
+
 	// Once all loaded, setup the map and controls.
 	return new RSVP.Promise(function(resolve, reject) {
 		RSVP.hash(layerPromises).then(function(overlays) {
@@ -896,12 +897,12 @@ $(function() {
 	map.spin(true);
 	window.layerControl = L.control.layers({}, {}, {position: 'bottomleft'}).addTo(map);
 	loadPrimaryLayers(window.layerControl).then(loadSecondaryLayers);
-	
+
 	//Update aggregates by zoom level
 	map.on('zoomend', function(){
 		updateAggregateVisibility();
 	});
-	
+
 	//Toggle Aggregate legend
 	map.on('baselayerchange', function(event){
 		if (event.layer == window.confirmedPoints){
@@ -922,7 +923,7 @@ $(function() {
 			}
 		}
 	});
-	
+
 	// Always show info box
 	info.addTo(map);
 	info.update();
@@ -955,15 +956,15 @@ function levelNameToId(levelName) {
  * @param {object} dimsStates The DIMS state data
  */
 function populateTable(outlines, outlineLayer, rw, dimsStates) {
-		
+
 	// TODO Make the 'counts' columns automatically generated based on the incoming data
 	// I.e., headers and columns are NOT hardcoded in the map.hbs and this file
-	
+
 	// Construct HTML for village rows
 	var html = "";
-	$.each( outlines.features, function( i, feature ) {		
-		var twitterCount = (feature.properties.counts && feature.properties.counts.twitter) ? feature.properties.counts.twitter : 0; 
-		var detikCount = (feature.properties.counts && feature.properties.counts.detik) ? feature.properties.counts.detik : 0; 
+	$.each( outlines.features, function( i, feature ) {
+		var twitterCount = (feature.properties.counts && feature.properties.counts.twitter) ? feature.properties.counts.twitter : 0;
+		var detikCount = (feature.properties.counts && feature.properties.counts.detik) ? feature.properties.counts.detik : 0;
 		html += "<tr class='village' id='table_village_" + levelNameToId(feature.properties.level_name) + "' data-level_name='" + feature.properties.level_name + "'>";
 		html += "<td><a class='village-toggle' data-expanded=''>+</a></td>";
 		html += "<td>" + feature.properties.pkey + "</td>";
@@ -972,14 +973,14 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 		html += "<td>" + detikCount + "</td>";
 		html += "<td></td>";
 		html += "<td></td>";
-		html += "</tr>";		
+		html += "</tr>";
 	});
 	$("#table table tbody").html( html );
 
 	// Construct HTML for neighbourhood rows
 	var $tBody = $("#table table tbody");
-	$.each( rw.features, function(i, feature) {
-		var twitterCount = (feature.properties.counts && feature.properties.counts.twitter) ? feature.properties.counts.twitter : 0; 
+	$.each( rw.features.reverse(), function(i, feature) {
+		var twitterCount = (feature.properties.counts && feature.properties.counts.twitter) ? feature.properties.counts.twitter : 0;
 		var detikCount = (feature.properties.counts && feature.properties.counts.detik) ? feature.properties.counts.detik : 0;
 		var html = "<tr id='table_rw_" + feature.properties.pkey + "' data-pkey='" + feature.properties.pkey + "' class='rw table_village_" + levelNameToId(feature.properties.parent_name) + "' style='display:none;'>";
 		html += "<td></td>";
@@ -1000,15 +1001,15 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 			html += "</select>";
 		}
 		html += "</td>";
-		html += "</tr>";		
+		html += "</tr>";
 
 		$('#table_village_'+levelNameToId(feature.properties.parent_name), $tBody).after( $(html) );
 	});
-	
+
 	$.each( dimsStates.features, function(i, feature) {
 		$("#table_rw_"+feature.properties.pkey+" .dimsStatus").html( feature.properties.level );
 	});
-	
+
 	// Store references to layers with each row
 	$("#table tr[id^=table_rw_]").each( function(i) {
 		var $row = $(this);
@@ -1020,7 +1021,7 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 		});
 		updateFloodedOutlineLayer($row);
 	});
-	
+
 	// When hovering over a table row, highlight the row and the corresponding layer
 	$("#table tr[id^=table_rw_]").on('mouseover', function() {
 		// Remove all highlights
@@ -1030,14 +1031,14 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 			// TODO This probably should not occur. Verify that it shouldn't happen and either
 			// remove this return, or handle the error if it could occur.
 			return;
-		} 
+		}
 		highlightOutlineLayer( layer );
 		$(this).addClass('highlighted');
 	}).on('mouseout', function() {
 		// Remove all highlights
 		$("#table tr.highlighted").removeClass('highlighted');
 	});
-	
+
 	// Expand/collapse the neighbourhood data rows for the village
 	$('.village-toggle').on('click', function() {
 		var $toggleButton = $(this);
@@ -1052,39 +1053,39 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 			$toggleButton.data('expanded', true);
 		}
 	});
-	
+
 	// Change the flooded state of the row
 	// Update the state internally and push the change to the server
 	function updateFloodedState($row) {
 		var layer = $row.data('layer');
-		
+
 		$.ajax('/banjir/data/api/v2/rem/flooded/'+layer.feature.properties.pkey, {
 			method: 'PUT',
 			data: 'state='+layer.feature.properties.state
 		});
 	}
-	
+
 	function updateFloodedOutlineLayer($row) {
 		var layer = $row.data('layer');
 		var $select = $('.flooded-state', $row);
-		
+
 		if ( $select.val() !== layer.feature.properties.state ) {
 			$select.val(layer.feature.properties.state);
 		}
-		
+
 		updateOutline(layer);
 	}
-	
+
 	// Handle the 'Flooded' state dropdown
 	$('.flooded-state').on('change', function() {
 		var $select = $(this);
 		var $row = $select.closest('tr');
 		var layer = $row.data('layer');
-		
+
 		layer.feature.properties.state = parseInt($select.val());
-		
+
 		updateFloodedState($row);
 		updateFloodedOutlineLayer($row);
 	});
-	
+
 }
