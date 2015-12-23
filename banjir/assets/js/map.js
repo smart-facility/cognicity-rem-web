@@ -375,6 +375,7 @@ var loadOutlines = function(village, rw, dimsStates){
 
 	outlineLayer = L.geoJson(rw, {style:styleOutline, onEachFeature:labelOutlines});
 	populateTable(village, outlineLayer, rw, dimsStates);
+	$('#legendbox').append(heightsLegend);
 	return outlineLayer;
 };
 
@@ -448,23 +449,23 @@ function styleOutline(feature) {
 	var style = {
 		weight: 0.5,
 		color: 'black',
-		fillOpacity: 0.5
+		fillOpacity: 0.8
 	};
 	// Set layer fill colour based on state
 	if (feature.properties.state === 0) {
 		style.fillColor = 'transparent';
 	} else if (feature.properties.state === 1) {
 		// Use caution
-		style.fillColor = '#FFFB68';
+		style.fillColor = 'yellow';
 	} else if (feature.properties.state === 2) {
 		// >0cm
-		style.fillColor = '#B2DFF2';
+		style.fillColor = '#9fd2f2';
 	} else if (feature.properties.state === 3) {
 		// >70cm
-		style.fillColor = '#56B8F9';
+		style.fillColor = '#3399FF';
 	} else if (feature.properties.state === 4) {
 		// >140cm
-		style.fillColor = '#3A8BAC';
+		style.fillColor = '#045a8d';
 	}
 	return style;
 }
@@ -688,7 +689,7 @@ info.onAdd = function(map){
 var hover_text;
 var reports_text;
 
-if (document.documentElement.lang == 'in'){
+if (document.documentElement.lang == 'in' || document.documentElement.lang == 'id'){
 	hover_text = 'Arahkan ke area';
 	reports_text = 'laporan';
 }
@@ -852,10 +853,7 @@ $(function() {
 	Listen for map events and load required layers
 */
 map.on('overlayremove', function(event){
-	if (event.layer == window.floodheights){
-		$('#heightsLegend').remove();
-	}
-	else if (event.layer == window.floodgauges){
+	if (event.layer == window.floodgauges){
 		$('#gaugesLegend').remove();
 	}
 	else if (event.layer == window.pumps){
@@ -870,11 +868,7 @@ map.on('overlayremove', function(event){
 });
 
 map.on('overlayadd', function(event){
-	if (event.layer == window.floodheights){
-		//heightsLegend.addTo(map);
-		$('#legendbox').append(heightsLegend);
-	}
-	else if (event.layer == window.floodgauges) {
+	if (event.layer == window.floodgauges) {
 		$('#legendbox').append(gaugesLegend);
 	}
 	else if (event.layer == window.pumps) {
@@ -941,7 +935,7 @@ function levelNameToId(levelName) {
 function populateTable(outlines, outlineLayer, rw, dimsStates) {
 
 	var html = "";
-	for (var i = 0; i < outlines.features.length-1; i++){
+	for (var i = 0; i < outlines.features.length; i++){
 		// Filter RW data by current village row
 		var key = "parent_name";
 		var value = outlines.features[i].properties.level_name;
@@ -949,7 +943,7 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 
 		// Build RW rows
 		var rw_html = "";
-		for (var x = 0; x < filtered.features.length-1; x++){
+		for (var x = 0; x < filtered.features.length; x++){
 			rw_html += "<tr id='table_rw_" + filtered.features[x].properties.pkey + "' data-pkey='" + filtered.features[x].properties.pkey + "' class='rw table_village_" + levelNameToId(filtered.features[x].properties.parent_name) + "' style='display:none;'>";
 			rw_html += "<td></td>";
 			rw_html += "<td>" + filtered.features[x].properties.pkey + "</td>";
@@ -961,7 +955,7 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 			if (editMode) {
 				rw_html += "<select class='flooded-state'>";
 				rw_html += "<option value='0'>Not set</option>";
-				rw_html += "<option value='1'>Use caution</option>";
+				rw_html += "<option value='1'>Hati-Hati</option>";
 				rw_html += "<option value='2'>&gt;0cm</option>";
 				rw_html += "<option value='3'>&gt;70cm</option>";
 				rw_html += "<option value='4'>&gt;140cm</option>";
@@ -988,7 +982,7 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 		html += rw_html;
 
 	}
-	$("#table table tbody").html( html );
+	$("#table table tbody").append( html );
 
 	$.each( dimsStates.features, function(i, feature) {
 		$("#table_rw_"+feature.properties.pkey+" .dimsStatus").html( feature.properties.level );
