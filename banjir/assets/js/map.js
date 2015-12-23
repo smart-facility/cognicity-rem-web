@@ -780,11 +780,11 @@ var loadPrimaryLayers = function(layerControl) {
 			overlays.confirmed.addTo(map);
 			layerControl.addBaseLayer(overlays.confirmed, layernames.confirmed);
 
-			// use turf for a point in polygon count
+			// use turf for a point in polygon count operations
 			var counted_rw = turf.count(overlays.rw, window.confirmedPoints_geojson, 'pt_count');
-
+			var counted_village = turf.count(overlays.village, window.confirmedPoints_geojson, 'pt_count');
 			// add outlines to map, and pass for table population
-			outlines = loadOutlines(overlays.village, counted_rw, overlays.states);
+			outlines = loadOutlines(counted_village, counted_rw, overlays.states);
 			outlines.addTo(map);
 
 			map.spin(false);
@@ -940,56 +940,55 @@ function levelNameToId(levelName) {
  */
 function populateTable(outlines, outlineLayer, rw, dimsStates) {
 
-	// TODO Make the 'counts' columns automatically generated based on the incoming data
-	// I.e., headers and columns are NOT hardcoded in the map.hbs and this file
-
-	// Construct HTML for village rows
 	var html = "";
-	$.each( outlines.features, function( i, feature ) {
-		var twitterCount = (feature.properties.counts && feature.properties.counts.twitter) ? feature.properties.counts.twitter : 0;
-		var detikCount = (feature.properties.counts && feature.properties.counts.detik) ? feature.properties.counts.detik : 0;
-		html += "<tr class='village' id='table_village_" + levelNameToId(feature.properties.level_name) + "' data-level_name='" + feature.properties.level_name + "'>";
-		html += "<td><a class='village-toggle' data-expanded=''>+</a></td>";
-		html += "<td>" + feature.properties.pkey + "</td>";
-		html += "<td>" + feature.properties.level_name + "</td>";
-		html += "<td>" + twitterCount+ "</td>";
-		html += "<td>" + detikCount + "</td>";
-		html += "<td></td>";
-		html += "<td></td>";
-		html += "</tr>";
-	});
-	$("#table table tbody").html( html );
+	for (var i = 0; i < outlines.features.length-1; i++){
+		// Filter RW data by current village row
+		var key = "parent_name";
+		var value = outlines.features[i].properties.level_name;
+		var filtered = turf.filter(rw, key, value);
 
-
-	// Construct HTML for neighbourhood rows
-	var $tBody = $("#table table tbody");
-	$.each( rw.features.reverse(), function(i, feature) {
-		var twitterCount = (feature.properties.counts && feature.properties.counts.twitter) ? feature.properties.counts.twitter : 0;
-		var detikCount = (feature.properties.counts && feature.properties.counts.detik) ? feature.properties.counts.detik : 0;
-		var html = "<tr id='table_rw_" + feature.properties.pkey + "' data-pkey='" + feature.properties.pkey + "' class='rw table_village_" + levelNameToId(feature.properties.parent_name) + "' style='display:none;'>";
-		html += "<td></td>";
-		html += "<td>" + feature.properties.pkey + "</td>";
-		html += "<td>"+feature.properties.level_name+"</td>";
-		html += "<td>" + twitterCount + "</td>";
-		html += "<td>" + detikCount + "</td>";
-		html += "<td class='dimsStatus'></td>";
-		html += "<td>";
-		// TODO Edit mode temporary fix
-		if (editMode) {
-			html += "<select class='flooded-state'>";
-			html += "<option value='0'>Not set</option>";
-			html += "<option value='1'>Use caution</option>";
-			html += "<option value='2'>&gt;0cm</option>";
-			html += "<option value='3'>&gt;70cm</option>";
-			html += "<option value='4'>&gt;140cm</option>";
-			html += "</select>";
+		// Build RW rows
+		var rw_html = "";
+		for (var x = 0; x < filtered.features.length-1; x++){
+			rw_html += "<tr id='table_rw_" + filtered.features[x].properties.pkey + "' data-pkey='" + filtered.features[x].properties.pkey + "' class='rw table_village_" + levelNameToId(filtered.features[x].properties.parent_name) + "' style='display:none;'>";
+			rw_html += "<td></td>";
+			rw_html += "<td>" + filtered.features[x].properties.pkey + "</td>";
+			rw_html += "<td>"+filtered.features[x].properties.level_name+"</td>";
+			rw_html += "<td>" + filtered.features[x].properties.pt_count + "</td>";
+			rw_html += "<td class='dimsStatus'></td>";
+			rw_html += "<td>";
+			// TODO Edit mode temporary fix
+			if (editMode) {
+				rw_html += "<select class='flooded-state'>";
+				rw_html += "<option value='0'>Not set</option>";
+				rw_html += "<option value='1'>Use caution</option>";
+				rw_html += "<option value='2'>&gt;0cm</option>";
+				rw_html += "<option value='3'>&gt;70cm</option>";
+				rw_html += "<option value='4'>&gt;140cm</option>";
+				rw_html += "</select>";
+			}
+			rw_html += "</td>";
+			rw_html += "</tr>";
 		}
-		html += "</td>";
+		// Village row
+		html += "<tr class='village' id='table_village_" + levelNameToId(outlines.features[i].properties.level_name) + "' data-level_name='" + outlines.features[i].level_name + "'>";
+		html += "<td><a class='village-toggle' data-expanded=''>+</a></td>";
+		html += "<td>" + outlines.features[i].properties.pkey + "</td>";
+		html += "<td>" + outlines.features[i].properties.level_name + "</td>";
+		if (outlines.features[i].properties.pt_count > 0){
+			html += "<td style='color:red;font-weight:bold'>" + outlines.features[i].properties.pt_count+ "</td>";
+		}
+		else {
+			html += "<td>" + outlines.features[i].properties.pt_count+ "</td>";
+		}
+		html += "<td></td>";
+		html += "<td></td>";
+		html += "<td></td>";
 		html += "</tr>";
+		html += rw_html;
 
-		$('#table_village_'+levelNameToId(feature.properties.parent_name), $tBody).after( $(html) );
-
-	});
+	}
+	$("#table table tbody").html( html );
 
 	$.each( dimsStates.features, function(i, feature) {
 		$("#table_rw_"+feature.properties.pkey+" .dimsStatus").html( feature.properties.level );
