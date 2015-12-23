@@ -22,6 +22,8 @@ module.exports = function(grunt) {
           'banjir/vendor/js/jquery.growl.js',
           'banjir/vendor/js/jquery.scrollUp.min.js',
           'banjir/vendor/js/url.min.js',
+          'banjir/vendor/js/Chart.min.js',
+          'banjir/vendor/js/turf.js',
           'banjir/assets/js/reports.js',
           'banjir/assets/js/validation.js'
         ],
@@ -42,7 +44,6 @@ module.exports = function(grunt) {
       build: {
         files :[
           {src: 'build/banjir/js/application.js', dest: 'build/banjir/js/application.min.js'},
-          {src: "banjir/assets/js/analytics.js", dest: "build/banjir/js/analytics.min.js"},
           {src: "banjir/assets/js/map.js", dest: "build/banjir/js/map.min.js"}
         ]
       }
