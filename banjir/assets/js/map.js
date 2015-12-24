@@ -207,7 +207,7 @@ var floodgaugeMarker = function(feature, layer){
 var getReports = function(type) {
 	return new RSVP.Promise(function(resolve, reject) {
 		// Use live data
-		jQuery.getJSON('//localhost:8081/banjir/data/api/v2/reports/'+type+'?format=topojson', function(data) {
+		jQuery.getJSON('https://petajakarta.org/banjir/data/api/v2/reports/'+type+'?format=topojson', function(data) {
 			if (data.features !== null){
 				//Convert topojson back to geojson for Leaflet
 				resolve(topojson.feature(data, data.objects.collection));
