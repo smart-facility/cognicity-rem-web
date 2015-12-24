@@ -552,27 +552,28 @@ function highlightOutlineLayer(layerElement) {
  * @param {object} layerElement Leaflet layer object
  */
 function highlightTableRow(layerElement) {
-	// Find table row which corresponds to the layer
-	var $row = $('#table_rw_'+levelNameToId(layerElement.feature.properties.parent_name));
-	if ($row.length===0) {
+	// Find table row which corresponds to the layer - VILLAGE LEVEL
+
+	var row = levelNameToId(layerElement.feature.properties.parent_name);
+	if (row.length===0) {
 		// FIXME This should not happen. Verify that this won't occur, or handle the error if it does.
 		return;
 	}
 
 	// If we have an active highlight, remove the highlight from the table row
 	if ( activeAggregate ) {
-		$('#t-'+levelNameToId(activeAggregate.feature.properties.level_name)).removeClass('highlighted');
+		$('#table_village_'+levelNameToId(activeAggregate.feature.properties.parent_name)).removeClass('highlighted');
 	}
 
 	// Highlight the table row
-	//$row.addClass('highlighted');
-	$('#table_village_ANCOL').addClass('highlighted');
+	$('#table_village_'+row).addClass('highlighted');
 
 	// Scroll the table view to the highlighted item
-	var rowTop = $row.offset().top;
+	var rowTop = $('#table_village_'+row).offset().top;
 	var $table = $("#table");
 	var tableTop = $table.offset().top;
 	$table.scrollTop( $table.scrollTop()  + rowTop - tableTop);
+
 }
 
 /**
