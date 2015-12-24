@@ -64,41 +64,15 @@ module.exports = function(grunt) {
         options: { json: 'banjir/assets/translations/en.json' }
       },
 
-      en_data: {
-        files: {'build/banjir/en/data/*.html': 'banjir/assets/templates/data/*.hbs'},
-        options: {json: 'banjir/assets/translations/en.json'}
-      },
-
-      en_research: {
-        files: {'build/banjir/en/research*.html': 'banjir/assets/templates/research/*.hbs'},
-        options: {json: 'banjir/assets/translations/en.json'}
-      },
-
       in: {
         files: { 'build/banjir/in/*.html': 'banjir/assets/templates/*.hbs'},
         options: { json: 'banjir/assets/translations/id.json' }
-      },
-      in_data: {
-        files: {'build/banjir/in/data/*.html': 'banjir/assets/templates/data/*.hbs'},
-        options: {json: 'banjir/assets/translations/id.json'}
-      },
-      in_research: {
-        files: {'build/banjir/in/research*.html': 'banjir/assets/templates/research/*.hbs'},
-        options: {json: 'banjir/assets/translations/id.json'}
       },
 
       id: {
         files: { 'build/banjir/id/*.html': 'banjir/assets/templates/*.hbs'},
         options: { json: 'banjir/assets/translations/id.json' }
-      },
-      id_data: {
-        files: {'build/banjir/id/data/*.html': 'banjir/assets/templates/data/*.hbs'},
-        options: {json: 'banjir/assets/translations/id.json'}
-      },
-      id_research: {
-        files: {'build/banjir/id/research*.html': 'banjir/assets/templates/research/*.hbs'},
-        options: {json: 'banjir/assets/translations/id.json'}
-      },
+      }
     },
     copy: {
       images: {
@@ -177,7 +151,7 @@ module.exports = function(grunt) {
 
   // Tasks
   grunt.registerTask('assets', ['jshint', 'concat:js', 'uglify:build', 'concat:css', 'cssmin:build', 'copy:images']);
-  grunt.registerTask('site', ['staticHandlebars:en', 'staticHandlebars:in', 'staticHandlebars:id', 'staticHandlebars:en_data', 'staticHandlebars:in_data', 'staticHandlebars:id_data', 'staticHandlebars:en_research', 'staticHandlebars:in_research', 'staticHandlebars:id_research']);
+  grunt.registerTask('site', ['staticHandlebars:en', 'staticHandlebars:in', 'staticHandlebars:id']);
   grunt.registerTask('server', ['assets', 'site', 'concurrent:server']);
   grunt.registerTask('default', ['assets', 'site']);
   grunt.registerTask('docs', ['jsdoc:dist'])
