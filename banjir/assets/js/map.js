@@ -650,7 +650,7 @@ mapLegend.onAdd = function(map) {
 };
 
 //flood heights scale
-var heightsLegend = '<div id="heightsLegend"><div class="sublegend"><div style="font-weight:bold">'+layernames.floodheights.title+'</div><div><i class="color" style="background:#045a8d;"></i><span>&nbsp;>150cm</span></div><div><i class="color" style="background:#3399FF"></i><span>&nbsp;>70cm </span></div><div><i class="color" style="background:#9fd2f2"></i><span>&nbsp;&ge;10cm </span></div><i class="color" style="background:yellow"></i><span>&nbsp;'+layernames.floodheights.tentative_areas+'</span></div></div>';
+var heightsLegend = '<div id="heightsLegend"><div class="sublegend"><div style="font-weight:bold">'+layernames.floodheights.title+'</div><div><i class="color" style="background:#045a8d;"></i><span>&nbsp;150cm +</span></div><div><i class="color" style="background:#3399FF"></i><span>&nbsp;71cm&ndash;150cm </span></div><div><i class="color" style="background:#9fd2f2"></i><span>&nbsp;10cm&ndash;70cm</span></div><i class="color" style="background:yellow"></i><span>&nbsp;'+layernames.floodheights.tentative_areas+'</span></div></div>';
 
 //flood gauges legend
 var siagaNames = {};
@@ -957,9 +957,9 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 				rw_html += "<select class='flooded-state'>";
 				rw_html += "<option value='0'>Not set</option>";
 				rw_html += "<option value='1'>Hati-Hati</option>";
-				rw_html += "<option value='2'>&ge;10cm</option>";
-				rw_html += "<option value='3'>&gt;70cm</option>";
-				rw_html += "<option value='4'>&gt;150cm</option>";
+				rw_html += "<option value='2'10&ndash;70cm</option>";
+				rw_html += "<option value='3'71&ndash;150cm</option>";
+				rw_html += "<option value='4'150cm +</option>";
 				rw_html += "</select>";
 			}
 			rw_html += "</td>";
