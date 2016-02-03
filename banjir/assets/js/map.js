@@ -963,9 +963,9 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 				rw_html += "<select class='flooded-state'>";
 				rw_html += "<option value='0'>Not set</option>";
 				rw_html += "<option value='1'>Hati-Hati</option>";
-				rw_html += "<option value='2'10&ndash;70cm</option>";
-				rw_html += "<option value='3'71&ndash;150cm</option>";
-				rw_html += "<option value='4'151cm +</option>";
+				rw_html += "<option value='2'>10&ndash;70cm</option>";
+				rw_html += "<option value='3'>71&ndash;150cm</option>";
+				rw_html += "<option value='4'>151cm +</option>";
 				rw_html += "</select>";
 			}
 			rw_html += "</td>";
