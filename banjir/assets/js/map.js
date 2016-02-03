@@ -991,7 +991,7 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 	}
 	$("#table table tbody").append( html );
 
-	for (var i=0; i<dimsStates.features.length; i++) {
+	for (i=0; i<dimsStates.features.length; i++) {
 		var feature = dimsStates.features[i];
 		$("#table_rw_"+feature.properties.pkey+" .dimsStatus").text( feature.properties.level );
 	}
