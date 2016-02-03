@@ -299,7 +299,13 @@ var loadConfirmedPoints = function(reports) {
 			},
 			onEachFeature: markerPopup
 		});
-  } else {
+	} else {
+		// TODO This 'empty' response stops crashes later on - could the server return an empty response? 
+		// Or could our other code treat an empty/null object as an empty response?
+		window.confirmedPoints_geojson = {
+			type: "FeatureCollection",
+			features: []
+		};
 		window.confirmedPoints = L.geoJson(null, {
 			pointToLayer: function(feature, latlng) {
 				var zIndexOffset = 0;
@@ -985,19 +991,20 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 	}
 	$("#table table tbody").append( html );
 
-	$.each( dimsStates.features, function(i, feature) {
-		$("#table_rw_"+feature.properties.pkey+" .dimsStatus").html( feature.properties.level );
-	});
+	for (var i=0; i<dimsStates.features.length; i++) {
+		var feature = dimsStates.features[i];
+		$("#table_rw_"+feature.properties.pkey+" .dimsStatus").text( feature.properties.level );
+	}
 
+	var outlineLayers = {};
+	$.each( outlineLayer._layers, function(i,layer) {
+		outlineLayers[layer.feature.properties.pkey] = layer;
+	});
+	
 	// Store references to layers with each row
 	$("#table tr[id^=table_rw_]").each( function(i) {
 		var $row = $(this);
-		// TODO Is there a better way to access the layers?
-		$.each( outlineLayer._layers, function(i,layer) {
-			if ( layer.feature.properties.pkey === $row.data('pkey') ) {
-				$row.data( 'layer', layer );
-			}
-		});
+		$row.data( 'layer', outlineLayers[$row.data('pkey')] );
 		updateFloodedOutlineLayer($row);
 	});
 
