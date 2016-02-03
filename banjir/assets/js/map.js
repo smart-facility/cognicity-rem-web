@@ -996,6 +996,7 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 		$("#table_rw_"+feature.properties.pkey+" .dimsStatus").text( feature.properties.level );
 	}
 
+	// Build lookup table of outline layers by pkey
 	var outlineLayers = {};
 	$.each( outlineLayer._layers, function(i,layer) {
 		outlineLayers[layer.feature.properties.pkey] = layer;
