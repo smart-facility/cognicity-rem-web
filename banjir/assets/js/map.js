@@ -300,7 +300,7 @@ var loadConfirmedPoints = function(reports) {
 			onEachFeature: markerPopup
 		});
 	} else {
-		// TODO This 'empty' response stops crashes later on - could the server return an empty response? 
+		// TODO This 'empty' response stops crashes later on - could the server return an empty response?
 		// Or could our other code treat an empty/null object as an empty response?
 		window.confirmedPoints_geojson = {
 			type: "FeatureCollection",
@@ -722,7 +722,7 @@ mapLegend.onAdd = function(map) {
 };
 
 //flood heights scale
-var heightsLegend = '<div id="heightsLegend"><div class="sublegend"><div style="font-weight:bold">'+layernames.floodheights.title+'</div><div><i class="color" style="background:#045a8d;"></i><span>&gt; 151 cm +</span></div><div><i class="color" style="background:#3399FF"></i><span>&nbsp;71 cm &ndash; 150 cm </span></div><div><i class="color" style="background:#9fd2f2"></i><span>&nbsp;10 cm &ndash; 70 cm</span></div><i class="color" style="background:yellow"></i><span>&nbsp;'+layernames.floodheights.tentative_areas+'</span></div></div>';
+var heightsLegend = '<div id="heightsLegend"><div class="sublegend"><div style="font-weight:bold">'+layernames.floodheights.title+'</div><div><i class="color" style="background:#045a8d;"></i><span>&gt; 151 cm</span></div><div><i class="color" style="background:#3399FF"></i><span>&nbsp;71 cm &ndash; 150 cm </span></div><div><i class="color" style="background:#9fd2f2"></i><span>&nbsp;10 cm &ndash; 70 cm</span></div><i class="color" style="background:yellow"></i><span>&nbsp;'+layernames.floodheights.tentative_areas+'</span></div></div>';
 
 //flood gauges legend
 var siagaNames = {};
@@ -1067,7 +1067,7 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 	$.each( outlineLayer._layers, function(i,layer) {
 		outlineLayers[layer.feature.properties.pkey] = layer;
 	});
-	
+
 	// Store references to layers with each row
 	$("#table tr[id^=table_rw_]").each( function(i) {
 		var $row = $(this);
