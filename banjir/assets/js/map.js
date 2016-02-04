@@ -457,6 +457,15 @@ function styleOutline(feature) {
 		color: 'black',
 		fillOpacity: 0.8
 	};
+	
+	if (feature.properties.selected) {
+		style.weight = 3;
+		style.color = 'blue';
+		//style.opacity = 1;
+		//style.dashArray = '';
+		style.fillOpacity = 0.7;
+	}
+	
 	// Set layer fill colour based on state
 	if (feature.properties.state === 0) {
 		style.fillColor = 'transparent';
@@ -473,6 +482,7 @@ function styleOutline(feature) {
 		// >150cm
 		style.fillColor = '#045a8d';
 	}
+	
 	return style;
 }
 
@@ -508,7 +518,7 @@ function labelOutlines(feature, layer) {
 	layer.on({
 		mouseover: highlightOutline,
 		mouseout: resetOutline,
-		click: highlightOutline,
+		click: selectOutline,
 		dblclick: zoomToFeature
 	});
 }
@@ -516,15 +526,65 @@ function labelOutlines(feature, layer) {
 var activeAggregate;
 
 /**
+ * Called by leaflet event when user clicks on a layer
+ * @param e Event object
+ */
+function selectOutline(e) {
+	selectItem(e.target);
+}
+
+/**
+ * RW layer which is selected
+ * TODO Move out of window scope
+ */
+var selectedItem;
+
+/**
+ * Freeze selection on a RW so that moving the
+ * cursor no longer highlights RWs under it.
+ * @param layer The layer to freeze selection on.
+ */
+function selectItem(layer) {
+	// Remove all highlights
+	$("#table tr.highlighted").removeClass('highlighted');
+	
+	// If an item is already selected, cancel selection mode
+	if ( selectedItem ) {
+		// Set selected state to off and update the layer rendering
+		selectedItem.feature.properties.selected = false;
+		updateOutline(selectedItem);
+		// Remove highlight from the table
+		$('#table tr.selected').removeClass('selected');
+		// Remember we don't have a selection
+		selectedItem = null;
+		// Highlight whatever the mouse is currently over
+		highlightOutline({target:layer});
+		
+	} else {
+		// If no item is selected, select the layer, rw row and village row
+		// Set layer selected state to true and update it's rendering
+		layer.feature.properties.selected = true;
+		updateOutline(layer);
+		// Highlight the RW and village rows
+		layer.row_rw.addClass('selected');
+		layer.row_village.addClass('selected');
+		// Remember we've got a selected layer
+		selectedItem = layer;
+	}
+}
+
+/**
 Visual highlighting of polygon when hovered over with the mouse
 
 @param {object} event - leaflet event object
 */
 function highlightOutline(e) {
-	var layer = e.target;
-
-	highlightTableRow( layer );
-	highlightOutlineLayer( layer );
+	if (!selectedItem) {
+		var layer = e.target;
+	
+		highlightTableRow( layer );
+		highlightOutlineLayer( layer );
+	}
 }
 
 /**
@@ -568,11 +628,15 @@ function highlightTableRow(layerElement) {
 
 	// If we have an active highlight, remove the highlight from the table row
 	if ( activeAggregate ) {
-		$('#table_village_'+levelNameToId(activeAggregate.feature.properties.parent_name)).removeClass('highlighted');
+		//$('#table_village_'+levelNameToId(activeAggregate.feature.properties.parent_name)).removeClass('highlighted');
+		activeAggregate.row_rw.removeClass('highlighted');
+		activeAggregate.row_village.removeClass('highlighted');
 	}
 
 	// Highlight the table row
-	$('#table_village_'+row).addClass('highlighted');
+	//$('#table_village_'+row).addClass('highlighted');
+	layerElement.row_rw.addClass('highlighted');
+	layerElement.row_village.addClass('highlighted');
 
 	// Scroll the table view to the highlighted item
 	var rowTop = $('#table_village_'+row).offset().top;
@@ -588,11 +652,13 @@ Reset style of aggregate after hover over
 @param {object} event - leaflet event object
 */
 function resetOutline(e){
-	var layer = e.target;
+	if (!selectedItem) {
+		var layer = e.target;
 
-	layer.setStyle(styleOutline(layer.feature));
+		layer.setStyle(styleOutline(layer.feature));
 
-	info.update();
+		info.update();
+	}
 }
 
 function zoomToFeature(e) {
@@ -951,7 +1017,7 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 		// Build RW rows
 		var rw_html = "";
 		for (var x = 0; x < filtered.features.length; x++){
-			rw_html += "<tr id='table_rw_" + filtered.features[x].properties.pkey + "' data-pkey='" + filtered.features[x].properties.pkey + "' class='rw table_village_" + levelNameToId(filtered.features[x].properties.parent_name) + "' style='display:none;'>";
+			rw_html += "<tr id='table_rw_" + filtered.features[x].properties.pkey + "' data-pkey='" + filtered.features[x].properties.pkey + "' class='rw table_village_" + levelNameToId(filtered.features[x].properties.parent_name) + "' style='display:none;' data-village-name='" + filtered.features[x].properties.parent_name + "'>";
 			rw_html += "<td></td>";
 			rw_html += "<td>" + filtered.features[x].properties.pkey + "</td>";
 			rw_html += "<td>"+filtered.features[x].properties.level_name+"</td>";
@@ -972,7 +1038,7 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 			rw_html += "</tr>";
 		}
 		// Village row
-		html += "<tr class='village' id='table_village_" + levelNameToId(outlines.features[i].properties.level_name) + "' data-level_name='" + outlines.features[i].level_name + "'>";
+		html += "<tr class='village' id='table_village_" + levelNameToId(outlines.features[i].properties.level_name) + "' data-level_name='" + outlines.features[i].properties.level_name + "'>";
 		html += "<td><a class='village-toggle' data-expanded=''>+</a></td>";
 		html += "<td>" + outlines.features[i].properties.pkey + "</td>";
 		html += "<td>" + outlines.features[i].properties.level_name + "</td>";
@@ -1005,25 +1071,39 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 	// Store references to layers with each row
 	$("#table tr[id^=table_rw_]").each( function(i) {
 		var $row = $(this);
-		$row.data( 'layer', outlineLayers[$row.data('pkey')] );
+		var rowPkey = $row.data('pkey');
+		$row.data( 'layer', outlineLayers[rowPkey] );
+		outlineLayers[rowPkey].row_rw = $row;
+		outlineLayers[rowPkey].row_village = $( "#table tr#table_village_" + levelNameToId($row.data('village-name')) );
+		$row.data( 'villageRow', outlineLayers[rowPkey].row_village );
 		updateFloodedOutlineLayer($row);
 	});
 
 	// When hovering over a table row, highlight the row and the corresponding layer
 	$("#table tr[id^=table_rw_]").on('mouseover', function() {
-		// Remove all highlights
-		$("#table tr.highlighted").removeClass('highlighted');
-		var layer = $(this).data('layer');
-		if (!layer || !layer._map) {
-			// TODO This probably should not occur. Verify that it shouldn't happen and either
-			// remove this return, or handle the error if it could occur.
-			return;
+		if (!selectedItem) {
+			// Remove all highlights
+			$("#table tr.highlighted").removeClass('highlighted');
+			var layer = $(this).data('layer');
+			if (!layer || !layer._map) {
+				// TODO This probably should not occur. Verify that it shouldn't happen and either
+				// remove this return, or handle the error if it could occur.
+				return;
+			}
+			highlightOutlineLayer( layer );
+			$(this).addClass('highlighted');
+			$(this).data('villageRow').addClass('highlighted');
 		}
-		highlightOutlineLayer( layer );
-		$(this).addClass('highlighted');
 	}).on('mouseout', function() {
-		// Remove all highlights
-		$("#table tr.highlighted").removeClass('highlighted');
+		if (!selectedItem) {
+			// Remove all highlights
+			$("#table tr.highlighted").removeClass('highlighted');			
+		}
+	}).on('click', function(e) {
+		// Ignore click events from the select control
+		if ( $(e.target).prop("tagName") !== 'SELECT' ) {
+			selectItem($(this).data('layer'));
+		}
 	});
 
 	// Expand/collapse the neighbourhood data rows for the village
