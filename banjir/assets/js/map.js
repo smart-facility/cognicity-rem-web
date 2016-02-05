@@ -455,13 +455,14 @@ function styleOutline(feature) {
 	var style = {
 		weight: 0.5,
 		color: 'black',
-		fillOpacity: 0.8
+		fillOpacity: 0.8,
+		opacity: 0.5
 	};
 	
 	if (feature.properties.selected) {
 		style.weight = 3;
 		style.color = 'blue';
-		//style.opacity = 1;
+		style.opacity = 1;
 		//style.dashArray = '';
 		style.fillOpacity = 0.7;
 	}
