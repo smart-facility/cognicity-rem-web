@@ -523,7 +523,7 @@ function labelOutlines(feature, layer) {
 	});
 }
 
-var activeAggregate;
+var activeAggregates = [];
 
 /**
  * Called by leaflet event when user clicks on a layer
@@ -550,13 +550,7 @@ function selectItem(layer) {
 	
 	// If an item is already selected, cancel selection mode
 	if ( selectedItem ) {
-		// Set selected state to off and update the layer rendering
-		selectedItem.feature.properties.selected = false;
-		updateOutline(selectedItem);
-		// Remove highlight from the table
-		$('#table tr.selected').removeClass('selected');
-		// Remember we don't have a selection
-		selectedItem = null;
+		deselectItem();
 		// Highlight whatever the mouse is currently over
 		highlightOutline({target:layer});
 		
@@ -570,6 +564,18 @@ function selectItem(layer) {
 		layer.row_village.addClass('selected');
 		// Remember we've got a selected layer
 		selectedItem = layer;
+	}
+}
+
+function deselectItem() {
+	if ( selectedItem ) {
+		// Set selected state to off and update the layer rendering
+		selectedItem.feature.properties.selected = false;
+		updateOutline(selectedItem);
+		// Remove highlight from the table
+		$('#table tr.selected').removeClass('selected');
+		// Remember we don't have a selection
+		selectedItem = null;
 	}
 }
 
@@ -593,8 +599,10 @@ function highlightOutline(e) {
  */
 function highlightOutlineLayer(layerElement) {
 	// If we've got an already highlighted layer, unhighlight it
-	if ( activeAggregate ) {
-		activeAggregate.setStyle(styleOutline(activeAggregate.feature));
+	if ( activeAggregates.length ) {
+		$.each( activeAggregates, function(i, activeAggregate) {
+			activeAggregate.setStyle(styleOutline(activeAggregate.feature));
+		});
 	}
 
 	// Highlight the layer
@@ -610,7 +618,33 @@ function highlightOutlineLayer(layerElement) {
 	info.update(layerElement.feature.properties);
 
 	// Retain which layer is highlighted
-	activeAggregate = layerElement;
+	activeAggregates = [layerElement];
+}
+
+function highlightOutlineLayers(layerElements) {
+	// If we've got an already highlighted layer, unhighlight it
+	if ( activeAggregates.length ) {
+		$.each( activeAggregates, function(i, activeAggregate) {
+			activeAggregate.setStyle(styleOutline(activeAggregate.feature));
+		});
+	}
+
+	// Highlight the layer
+	$.each(layerElements, function(i, layerElement) {
+		layerElement.setStyle({
+			weight: 3,
+			color: 'red',
+			opacity:1,
+			dashArray: '',
+			fillOpacity: 0.7
+		});
+	});
+
+	// Update the tooltip
+	// TODO
+	//info.update(layerElement.feature.properties);
+
+	activeAggregates = layerElements;
 }
 
 /**
@@ -627,10 +661,12 @@ function highlightTableRow(layerElement) {
 	}
 
 	// If we have an active highlight, remove the highlight from the table row
-	if ( activeAggregate ) {
-		//$('#table_village_'+levelNameToId(activeAggregate.feature.properties.parent_name)).removeClass('highlighted');
-		activeAggregate.row_rw.removeClass('highlighted');
-		activeAggregate.row_village.removeClass('highlighted');
+	if ( activeAggregates ) {
+		$.each( activeAggregates, function(i, activeAggregate) {
+			//$('#table_village_'+levelNameToId(activeAggregate.feature.properties.parent_name)).removeClass('highlighted');
+			activeAggregate.row_rw.removeClass('highlighted');
+			activeAggregate.row_village.removeClass('highlighted');
+		});
 	}
 
 	// Highlight the table row
@@ -1103,6 +1139,38 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 		// Ignore click events from the select control
 		if ( $(e.target).prop("tagName") !== 'SELECT' ) {
 			selectItem($(this).data('layer'));
+		}
+	});
+	
+	// Store list of RW layers with each Village row
+	var rwLayers;
+	$("#table tr[id^=table_village_]").each( function(i) {
+		var levelNameId = levelNameToId($(this).data('level_name'));
+		rwLayers = [];
+		$( "#table tr.table_village_"+levelNameId ).each( function(i) {
+			rwLayers.push( $(this).data('layer') );
+		});
+		$(this).data('rwLayers', rwLayers);
+	});	
+	
+	$("#table tr[id^=table_village_]").on('mouseover', function() {
+		if (!selectedItem) {
+			// Remove all highlights
+			$("#table tr.highlighted").removeClass('highlighted');
+			
+			var $row = $(this);
+			highlightOutlineLayers( $row.data('rwLayers') );
+			$row.addClass('highlighted');
+		}
+	}).on('mouseout', function() {
+		if (!selectedItem) {
+			// Remove all highlights
+			$("#table tr.highlighted").removeClass('highlighted');			
+		}
+	}).on('click', function(e) {
+		if ( $(e.target).prop("tagName") !== 'A' ) {
+			deselectItem();
+			$(this).trigger('mouseover');
 		}
 	});
 
