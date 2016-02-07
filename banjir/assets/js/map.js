@@ -997,10 +997,10 @@ map.on('overlayadd', function(event){
 */
 map.on('popupopen', function(popup){
 
-	if ($('tweet-container')){
+	if ($('#tweet-container')){
 			twttr.widgets.load($('.leaflet-popup-content'));
 		}
-	if ($('floodgauge-container')){
+	if ($('#floodgauge-container')){
 		if (popup.popup._source.feature.properties !== null){
 				var properties = popup.popup._source.feature.properties;
 				var ctx = $("#gaugeChart").get(0).getContext("2d");
