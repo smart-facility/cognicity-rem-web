@@ -1045,6 +1045,14 @@ function levelNameToId(levelName) {
 function populateTable(outlines, outlineLayer, rw, dimsStates) {
 
 	var html = "";
+	
+	// Build lookup table of DIMS states
+	var dimsStatesByPkey = {};
+	for (i=0; i<dimsStates.features.length; i++) {
+		var feature = dimsStates.features[i];
+		dimsStatesByPkey[feature.properties.pkey] = feature.properties.level;
+	}
+	
 	for (var i = 0; i < outlines.features.length; i++){
 		// Filter RW data by current village row
 		var key = "parent_name";
@@ -1054,12 +1062,16 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 		// Build RW rows
 		var rw_html = "";
 		for (var x = 0; x < filtered.features.length; x++){
+			var dimsStateText = "";
+			if (dimsStatesByPkey[filtered.features[x].properties.pkey] !== undefined) {
+				dimsStateText = dimsStatesByPkey[filtered.features[x].properties.pkey];
+			}
 			rw_html += "<tr id='table_rw_" + filtered.features[x].properties.pkey + "' data-pkey='" + filtered.features[x].properties.pkey + "' class='rw table_village_" + levelNameToId(filtered.features[x].properties.parent_name) + "' style='display:none;' data-village-name='" + filtered.features[x].properties.parent_name + "'>";
 			rw_html += "<td></td>";
 			rw_html += "<td>" + filtered.features[x].properties.pkey + "</td>";
 			rw_html += "<td>"+filtered.features[x].properties.level_name+"</td>";
 			rw_html += "<td>" + filtered.features[x].properties.pt_count + "</td>";
-			rw_html += "<td class='dimsStatus'></td>";
+			rw_html += "<td class='dimsStatus'>" + dimsStateText + "</td>";
 			rw_html += "<td>";
 			// TODO Edit mode temporary fix
 			if (editMode) {
@@ -1093,11 +1105,6 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 
 	}
 	$("#table table tbody").append( html );
-
-	for (i=0; i<dimsStates.features.length; i++) {
-		var feature = dimsStates.features[i];
-		$("#table_rw_"+feature.properties.pkey+" .dimsStatus").text( feature.properties.level );
-	}
 
 	// Build lookup table of outline layers by pkey
 	var outlineLayers = {};
