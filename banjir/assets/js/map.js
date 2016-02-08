@@ -17,7 +17,6 @@ String.prototype.parseURL = function() {
 * Specify layernames
 */
 var layernames = {};
-var buttonLabels = {};
 if (document.documentElement.lang == 'in' || document.documentElement.lang == 'id'){
 	layernames.confirmed = 'Laporan Banjir';
 	layernames.verified = 'Laporan BPBD';
@@ -29,8 +28,6 @@ if (document.documentElement.lang == 'in' || document.documentElement.lang == 'i
 		tentative_areas:'Hati-Hati'
 	};
 	layernames.floodgauges = 'Tinggi Muka Air';
-	
-	buttonLabels.not_set = 'Tidak diatur';
 }
 else {
 	layernames.confirmed = 'Flood Reports';
@@ -43,8 +40,6 @@ else {
 		tentative_areas:'Use Caution'
 		};
 	layernames.floodgauges = 'River Gauges';
-
-	buttonLabels.not_set = 'Not set';
 }
 
 /**
@@ -385,7 +380,10 @@ var loadOutlines = function(village, rw, dimsStates){
 
 	outlineLayer = L.geoJson(rw, {style:styleOutline, onEachFeature:labelOutlines});
 	populateTable(village, outlineLayer, rw, dimsStates);
+	
 	$('#legendbox').append(heightsLegend);
+	updateRWCounts();
+
 	return outlineLayer;
 };
 
@@ -764,7 +762,7 @@ mapLegend.onAdd = function(map) {
 };
 
 //flood heights scale
-var heightsLegend = '<div id="heightsLegend"><div class="sublegend"><div style="font-weight:bold">'+layernames.floodheights.title+'</div><div><i class="color" style="background:#cc2a41;"></i><span>&nbsp;&gt; 151 cm</span></div><div><i class="color" style="background:#ff8300"></i><span>&nbsp;71 cm &ndash; 150 cm </span></div><div><i class="color" style="background:#ffff00"></i><span>&nbsp;10 cm &ndash; 70 cm</span></div><i class="color" style="background:#a0a9f7"></i><span>&nbsp;'+layernames.floodheights.tentative_areas+'</span></div></div>';
+var heightsLegend = '<div id="heightsLegend"><div class="sublegend"><div style="font-weight:bold">'+layernames.floodheights.title+'<span class="count countHeader">RWs</span></div><div><i class="color" style="background:#cc2a41;"></i><span>&nbsp;&gt; 151 cm</span><span class="count countState4"></span></div><div><i class="color" style="background:#ff8300"></i><span>&nbsp;71 cm &ndash; 150 cm </span><span class="count countState3"></span></div><div><i class="color" style="background:#ffff00"></i><span>&nbsp;10 cm &ndash; 70 cm</span><span class="count countState2"></span></div><i class="color" style="background:#a0a9f7"></i><span>&nbsp;'+layernames.floodheights.tentative_areas+'</span><span class="count countState1"></span></div></div>';
 
 //flood gauges legend
 var siagaNames = {};
@@ -1032,6 +1030,22 @@ map.on('popupopen', function(popup){
 });
 
 /**
+ * TODO
+ */
+function updateRWCounts() {
+	var remStateCounts = [0,0,0,0,0];
+	$("#table tr[id^=table_rw_]").each( function(i) {
+		var $row = $(this);
+		var layer = $row.data('layer');
+		var state = layer.feature.properties.state;
+		remStateCounts[state]++;
+	});
+	for (var i=0; i<5; i++) {
+		$("#legendbox .countState"+i).text( remStateCounts[i] );
+	}
+}
+
+/**
  * Transform a plain text level name into a string suitable for use as a DOM ID
  * @param levelName Level name in plain text
  * @returns Level name suitable for use as a DOM ID
@@ -1081,7 +1095,7 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 			// TODO Edit mode temporary fix
 			if (editMode) {
 				rw_html += "<select class='flooded-state'>";
-				rw_html += "<option value='0'>" + buttonLabels.not_set + "</option>";
+				rw_html += "<option value='0'></option>";
 				rw_html += "<option value='1'>" + layernames.floodheights.tentative_areas + "</option>";
 				rw_html += "<option value='2'>10&ndash;70cm</option>";
 				rw_html += "<option value='3'>71&ndash;150cm</option>";
@@ -1246,8 +1260,8 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 
 		updateFloodedState($row);
 		updateFloodedOutlineLayer($row);
+		updateRWCounts();
 	});
-
 }
 // Finally, add the legend
 mapLegend.addTo(map);
