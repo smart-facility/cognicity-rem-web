@@ -1145,7 +1145,7 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 		}
 	}).on('click', function(e) {
 		// Ignore click events from the select control
-		if ( $(e.target).prop("tagName") !== 'SELECT' ) {
+		if ( $(e.target).prop("tagName") !== 'SELECT' && $(e.target).prop("tagName") !== 'OPTION' ) {
 			selectItem($(this).data('layer'));
 		}
 	});
