@@ -472,16 +472,16 @@ function styleOutline(feature) {
 		style.fillColor = 'transparent';
 	} else if (feature.properties.state === 1) {
 		// Use caution
-		style.fillColor = 'yellow';
+		style.fillColor = '#a0a9f7';
 	} else if (feature.properties.state === 2) {
 		// >=10cm
-		style.fillColor = '#9fd2f2';
+		style.fillColor = '#ffff00';
 	} else if (feature.properties.state === 3) {
 		// >70cm
-		style.fillColor = '#3399FF';
+		style.fillColor = '#ff8300';
 	} else if (feature.properties.state === 4) {
 		// >150cm
-		style.fillColor = '#045a8d';
+		style.fillColor = '#cc2a41';
 	}
 	
 	return style;
@@ -759,7 +759,7 @@ mapLegend.onAdd = function(map) {
 };
 
 //flood heights scale
-var heightsLegend = '<div id="heightsLegend"><div class="sublegend"><div style="font-weight:bold">'+layernames.floodheights.title+'</div><div><i class="color" style="background:#045a8d;"></i><span>&gt; 151 cm</span></div><div><i class="color" style="background:#3399FF"></i><span>&nbsp;71 cm &ndash; 150 cm </span></div><div><i class="color" style="background:#9fd2f2"></i><span>&nbsp;10 cm &ndash; 70 cm</span></div><i class="color" style="background:yellow"></i><span>&nbsp;'+layernames.floodheights.tentative_areas+'</span></div></div>';
+var heightsLegend = '<div id="heightsLegend"><div class="sublegend"><div style="font-weight:bold">'+layernames.floodheights.title+'</div><div><i class="color" style="background:#cc2a41;"></i><span>&nbsp;&gt; 151 cm</span></div><div><i class="color" style="background:#ff8300"></i><span>&nbsp;71 cm &ndash; 150 cm </span></div><div><i class="color" style="background:#ffff00"></i><span>&nbsp;10 cm &ndash; 70 cm</span></div><i class="color" style="background:#a0a9f7"></i><span>&nbsp;'+layernames.floodheights.tentative_areas+'</span></div></div>';
 
 //flood gauges legend
 var siagaNames = {};
