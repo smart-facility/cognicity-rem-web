@@ -560,9 +560,10 @@ function selectItem(layer) {
 		// Set layer selected state to true and update it's rendering
 		layer.feature.properties.selected = true;
 		updateOutline(layer);
-		// Highlight the RW and village rows
+		// Highlight the RW and village rows, expand the village row
 		layer.row_rw.addClass('selected');
 		layer.row_village.addClass('selected');
+		layer.row_village.trigger('expand');
 		// Remember we've got a selected layer
 		selectedItem = layer;
 	}
@@ -1185,16 +1186,28 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 	// Expand/collapse the neighbourhood data rows for the village
 	$('.village-toggle').on('click', function() {
 		var $toggleButton = $(this);
-		var villageClass = '.' + $toggleButton.closest('tr').attr('id');
-		if ($toggleButton.data('expanded')) {
-			$toggleButton.text('+');
-			$( villageClass ).hide();
-			$toggleButton.data('expanded', false);
+		var $villageRow = $toggleButton.closest('tr');
+		if ($villageRow.data('expanded')) {
+			$villageRow.trigger('collapse');
 		} else {
-			$toggleButton.text('-');
-			$( villageClass ).show();
-			$toggleButton.data('expanded', true);
+			$villageRow.trigger('expand');
 		}
+	});
+	
+	$("#table tr[id^=table_village_]").on('expand', function() {
+		var $villageRow = $(this);
+		var $toggleButton = $villageRow.find('.village-toggle');
+		var villageClass = '.' + $villageRow.attr('id');
+		$toggleButton.text('-');
+		$( villageClass ).show();
+		$villageRow.data('expanded', true);		
+	}).on('collapse', function() {
+		var $villageRow = $(this);
+		var $toggleButton = $villageRow.find('.village-toggle');
+		var villageClass = '.' + $villageRow.attr('id');
+		$toggleButton.text('+');
+		$( villageClass ).hide();
+		$villageRow.data('expanded', false);
 	});
 
 	// Change the flooded state of the row
