@@ -17,6 +17,7 @@ String.prototype.parseURL = function() {
 * Specify layernames
 */
 var layernames = {};
+var buttonLabels = {};
 if (document.documentElement.lang == 'in' || document.documentElement.lang == 'id'){
 	layernames.confirmed = 'Laporan Banjir';
 	layernames.verified = 'Laporan BPBD';
@@ -28,6 +29,8 @@ if (document.documentElement.lang == 'in' || document.documentElement.lang == 'i
 		tentative_areas:'Hati-Hati'
 	};
 	layernames.floodgauges = 'Tinggi Muka Air';
+	
+	buttonLabels.not_set = 'Tidak diatur';
 }
 else {
 	layernames.confirmed = 'Flood Reports';
@@ -41,6 +44,7 @@ else {
 		};
 	layernames.floodgauges = 'River Gauges';
 
+	buttonLabels.not_set = 'Not set';
 }
 
 /**
@@ -1077,8 +1081,8 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 			// TODO Edit mode temporary fix
 			if (editMode) {
 				rw_html += "<select class='flooded-state'>";
-				rw_html += "<option value='0'>Not set</option>";
-				rw_html += "<option value='1'>Hati-Hati</option>";
+				rw_html += "<option value='0'>" + buttonLabels.not_set + "</option>";
+				rw_html += "<option value='1'>" + layernames.floodheights.tentative_areas + "</option>";
 				rw_html += "<option value='2'>10&ndash;70cm</option>";
 				rw_html += "<option value='3'>71&ndash;150cm</option>";
 				rw_html += "<option value='4'>151cm +</option>";
