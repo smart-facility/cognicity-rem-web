@@ -72,6 +72,14 @@ body {
     font-size: 14px;
 }
 
+#table table tr.village.highlighted {
+    background-color: #fcc;
+}
+
+#table table tr.village.selected {
+    background-color: #ccf;
+}
+
 #table table .village .flooded-state {
     font-size: 12px;
 }
