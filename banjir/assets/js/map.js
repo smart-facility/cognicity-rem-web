@@ -1206,7 +1206,7 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 	$('.village-toggle').on('click', function() {
 		var $toggleButton = $(this);
 		var $villageRow = $toggleButton.closest('tr');
-		if ($villageRow.data('expanded')) {
+		if ($villageRow.hasClass('expanded')) {
 			$villageRow.trigger('collapse');
 		} else {
 			$villageRow.trigger('expand');
@@ -1219,14 +1219,19 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 		var villageClass = '.' + $villageRow.attr('id');
 		$toggleButton.html('&ndash;');
 		$( villageClass ).show();
-		$villageRow.data('expanded', true);		
+		$villageRow.addClass('expanded');		
 	}).on('collapse', function() {
 		var $villageRow = $(this);
 		var $toggleButton = $villageRow.find('.village-toggle');
 		var villageClass = '.' + $villageRow.attr('id');
 		$toggleButton.text('+');
 		$( villageClass ).hide();
-		$villageRow.data('expanded', false);
+		$villageRow.removeClass('expanded');
+	});
+	
+	// Wire 'collapse all' button action
+	$(".collapse-all").on('click', function() {
+		$("#table tr[id^=table_village_].expanded").trigger('collapse');
 	});
 
 	// Change the flooded state of the row
