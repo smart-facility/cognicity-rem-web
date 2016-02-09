@@ -1217,7 +1217,7 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 		var $villageRow = $(this);
 		var $toggleButton = $villageRow.find('.village-toggle');
 		var villageClass = '.' + $villageRow.attr('id');
-		$toggleButton.text('-');
+		$toggleButton.html('&ndash;');
 		$( villageClass ).show();
 		$villageRow.data('expanded', true);		
 	}).on('collapse', function() {
