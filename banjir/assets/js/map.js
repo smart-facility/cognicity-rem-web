@@ -71,7 +71,7 @@ var detikPopup = function(feature){
 */
 
 var qluePopup = function(feature){
-	var popup = '<div id="qlue-container" style="width:220px; height:220px; overflow-y:scroll; background-color:white;"><div class="media"><a class="pull-left" href="#"><img class="media-object" src="/banjir/img/logo_qlue.png" height="32"></a></div><p class="lead" style="margin-bottom:4px;margin-top:4px;font-size:16px;">'+feature.properties.title+'</p><img class="img-responsive" src="'+feature.properties.image_url.replace('http://','https://')+'" width="210"/><h5>'+feature.properties.text+'</h5><h5>'+feature.properties.created_at.replace('T',' ')+'</div>';
+	var popup = '<div id="qlue-container" style="width:220px; height:220px; overflow-y:scroll; background-color:white;"><div class="media"><a class="pull-left" href="#"><img class="media-object" src="/banjir/img/logo_qlue_height_32.png" height="32"></a></div><p class="lead" style="margin-bottom:4px;margin-top:4px;font-size:16px;">'+feature.properties.title+'</p><img class="img-responsive" src="'+feature.properties.image_url.replace('http://','https://')+'" width="210"/><h5>'+feature.properties.text+'</h5><h5>'+feature.properties.created_at.replace('T',' ')+'</div>';
 	return popup;
 };
 
@@ -380,7 +380,7 @@ var loadOutlines = function(village, rw, dimsStates){
 
 	outlineLayer = L.geoJson(rw, {style:styleOutline, onEachFeature:labelOutlines});
 	populateTable(village, outlineLayer, rw, dimsStates);
-	
+
 	$('#legendbox').append(heightsLegend);
 	updateRWCounts();
 
@@ -460,7 +460,7 @@ function styleOutline(feature) {
 		fillOpacity: 0.8,
 		opacity: 0.5
 	};
-	
+
 	if (feature.properties.selected) {
 		style.weight = 3;
 		style.color = 'blue';
@@ -468,7 +468,7 @@ function styleOutline(feature) {
 		//style.dashArray = '';
 		style.fillOpacity = 0.7;
 	}
-	
+
 	// Set layer fill colour based on state
 	if (feature.properties.state === 0) {
 		style.fillColor = 'transparent';
@@ -485,7 +485,7 @@ function styleOutline(feature) {
 		// >150cm
 		style.fillColor = '#cc2a41';
 	}
-	
+
 	return style;
 }
 
@@ -550,13 +550,13 @@ var selectedItem;
 function selectItem(layer) {
 	// Remove all highlights
 	$("#table tr.highlighted").removeClass('highlighted');
-	
+
 	// If an item is already selected, cancel selection mode
 	if ( selectedItem ) {
 		deselectItem();
 		// Highlight whatever the mouse is currently over
 		highlightOutline({target:layer});
-		
+
 	} else {
 		// If no item is selected, select the layer, rw row and village row
 		// Set layer selected state to true and update it's rendering
@@ -591,7 +591,7 @@ Visual highlighting of polygon when hovered over with the mouse
 function highlightOutline(e) {
 	if (!selectedItem) {
 		var layer = e.target;
-	
+
 		highlightTableRow( layer );
 		highlightOutlineLayer( layer );
 	}
@@ -1064,14 +1064,14 @@ function levelNameToId(levelName) {
 function populateTable(outlines, outlineLayer, rw, dimsStates) {
 
 	var html = "";
-	
+
 	// Build lookup table of DIMS states
 	var dimsStatesByPkey = {};
 	for (i=0; i<dimsStates.features.length; i++) {
 		var feature = dimsStates.features[i];
 		dimsStatesByPkey[feature.properties.pkey] = feature.properties.level;
 	}
-	
+
 	for (var i = 0; i < outlines.features.length; i++){
 		// Filter RW data by current village row
 		var key = "parent_name";
@@ -1160,7 +1160,7 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 	}).on('mouseout', function() {
 		if (!selectedItem) {
 			// Remove all highlights
-			$("#table tr.highlighted").removeClass('highlighted');			
+			$("#table tr.highlighted").removeClass('highlighted');
 		}
 	}).on('click', function(e) {
 		// Ignore click events from the select control
@@ -1168,7 +1168,7 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 			selectItem($(this).data('layer'));
 		}
 	});
-	
+
 	// Store list of RW layers with each Village row
 	var rwLayers;
 	$("#table tr[id^=table_village_]").each( function(i) {
@@ -1178,13 +1178,13 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 			rwLayers.push( $(this).data('layer') );
 		});
 		$(this).data('rwLayers', rwLayers);
-	});	
-	
+	});
+
 	$("#table tr[id^=table_village_]").on('mouseover', function() {
 		if (!selectedItem) {
 			// Remove all highlights
 			$("#table tr.highlighted").removeClass('highlighted');
-			
+
 			var $row = $(this);
 			highlightOutlineLayers( $row.data('rwLayers') );
 			$row.addClass('highlighted');
@@ -1192,7 +1192,7 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 	}).on('mouseout', function() {
 		if (!selectedItem) {
 			// Remove all highlights
-			$("#table tr.highlighted").removeClass('highlighted');			
+			$("#table tr.highlighted").removeClass('highlighted');
 		}
 	}).on('click', function(e) {
 		if ( $(e.target).prop("tagName") !== 'A' ) {
@@ -1212,14 +1212,14 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 			$villageRow.trigger('expand');
 		}
 	});
-	
+
 	$("#table tr[id^=table_village_]").on('expand', function() {
 		var $villageRow = $(this);
 		var $toggleButton = $villageRow.find('.village-toggle');
 		var villageClass = '.' + $villageRow.attr('id');
 		$toggleButton.html('&ndash;');
 		$( villageClass ).show();
-		$villageRow.addClass('expanded');		
+		$villageRow.addClass('expanded');
 	}).on('collapse', function() {
 		var $villageRow = $(this);
 		var $toggleButton = $villageRow.find('.village-toggle');
