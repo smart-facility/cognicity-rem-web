@@ -1197,6 +1197,7 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 	}).on('click', function(e) {
 		if ( $(e.target).prop("tagName") !== 'A' ) {
 			deselectItem();
+			$(this).trigger('expand');
 			$(this).trigger('mouseover');
 		}
 	});
