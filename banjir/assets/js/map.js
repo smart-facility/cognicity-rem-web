@@ -1107,7 +1107,7 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 		}
 		// Village row
 		html += "<tr class='village' id='table_village_" + levelNameToId(outlines.features[i].properties.level_name) + "' data-level_name='" + outlines.features[i].properties.level_name + "'>";
-		html += "<td><a class='village-toggle' data-expanded=''>+</a></td>";
+		html += "<td><a class='village-toggle' data-expanded=''><span class='glyphicon glyphicon-plus' aria-hidden='true'></span></a></td>";
 		html += "<td>" + outlines.features[i].properties.pkey + "</td>";
 		html += "<td>" + outlines.features[i].properties.level_name + "</td>";
 		if (outlines.features[i].properties.pt_count > 0){
@@ -1195,7 +1195,7 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 			$("#table tr.highlighted").removeClass('highlighted');
 		}
 	}).on('click', function(e) {
-		if ( $(e.target).prop("tagName") !== 'A' ) {
+		if ( $(e.target).prop("tagName") !== 'A' && $(e.target).prop("tagName") !== 'SPAN' ) {
 			deselectItem();
 			$(this).trigger('expand');
 			$(this).trigger('mouseover');
@@ -1217,14 +1217,14 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 		var $villageRow = $(this);
 		var $toggleButton = $villageRow.find('.village-toggle');
 		var villageClass = '.' + $villageRow.attr('id');
-		$toggleButton.html('&ndash;');
+		$toggleButton.html("<span class='glyphicon glyphicon-minus' aria-hidden='true'></span>");
 		$( villageClass ).show();
 		$villageRow.addClass('expanded');
 	}).on('collapse', function() {
 		var $villageRow = $(this);
 		var $toggleButton = $villageRow.find('.village-toggle');
 		var villageClass = '.' + $villageRow.attr('id');
-		$toggleButton.text('+');
+		$toggleButton.html("<span class='glyphicon glyphicon-plus' aria-hidden='true'></span>");
 		$( villageClass ).hide();
 		$villageRow.removeClass('expanded');
 	});

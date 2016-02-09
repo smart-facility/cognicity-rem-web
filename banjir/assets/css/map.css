@@ -55,8 +55,8 @@ body {
 
 #table table .village-toggle {
     cursor: pointer;
-    font-weight: bold;
     padding-left: 10px;
+    font-size: 10px;
 }
 
 #table table tr.highlighted {
@@ -102,6 +102,7 @@ body {
 .collapse-all {
 	padding-left: 9px;
 	cursor: pointer;
+	font-size: 10px;
 }
 
 .info {
