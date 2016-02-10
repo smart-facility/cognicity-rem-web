@@ -152,13 +152,13 @@ var infrastructureMarkerPopup = function(feature, layer){
 var getSiagaLevelIconography = function(level){
 	switch (level) {
 		case 1:
-			return {'color':'#FF4000','icon':'floodgauge_1.svg'};
+			return {'color':'#FF4000','icon':'floodgauge_1.png'};
 		case 2:
-			return {'color':'#FF8000','icon':'floodgauge_2.svg'};
+			return {'color':'#FF8000','icon':'floodgauge_2.png'};
 		case 3:
-			return {'color':'#F7D358','icon':'floodgauge_3.svg'};
+			return {'color':'#F7D358','icon':'floodgauge_3.png'};
 		default:
-			return {'color':'#01DF01','icon':'floodgauge.svg'};
+			return {'color':'#01DF01','icon':'floodgauge.png'};
 	}
 };
 
@@ -435,13 +435,13 @@ var styleInfrastructure = {
 		opacity:1,
 	},
 	pumps:L.icon({
-		iconUrl: '/banjir/img/pump.svg',
+		iconUrl: '/banjir/img/pump.png',
 		iconSize: [22,22],
 		iconAnchor: [11, 11],
 		popupAnchor: [0, 0],
 	}),
 	floodgates:L.icon({
-		iconUrl: '/banjir/img/floodgate.svg',
+		iconUrl: '/banjir/img/floodgate.png',
 		iconSize: [22,22],
 		iconAnchor: [11, 11],
 		popupAnchor: [0, 0],
@@ -762,7 +762,7 @@ mapLegend.onAdd = function(map) {
 };
 
 //flood heights scale
-var heightsLegend = '<div id="heightsLegend"><div class="sublegend"><div style="font-weight:bold">'+layernames.floodheights.title+'<span class="count countHeader">RWs</span></div><div><i class="color" style="background:#cc2a41;"></i><span>&nbsp;&gt; 151 cm</span><span class="count countState4"></span></div><div><i class="color" style="background:#ff8300"></i><span>&nbsp;71 cm &ndash; 150 cm </span><span class="count countState3"></span></div><div><i class="color" style="background:#ffff00"></i><span>&nbsp;10 cm &ndash; 70 cm</span><span class="count countState2"></span></div><i class="color" style="background:#a0a9f7"></i><span>&nbsp;'+layernames.floodheights.tentative_areas+'</span><span class="count countState1"></span></div></div>';
+var heightsLegend = '<div id="heightsLegend"><div class="sublegend"><div style="font-weight:bold">'+layernames.floodheights.title+'<span class="count countHeader">RWs</span></div><div style="clear:both;"><i class="color" style="background:#cc2a41;"></i><span style="float: left;">&nbsp;&gt; 151 cm</span><span class="count countState4"></span></div><div style="clear:both;"><i class="color" style="background:#ff8300"></i><span style="float: left;">&nbsp;71 cm &ndash; 150 cm </span><span class="count countState3"></span></div><div style="clear:both;"><i class="color" style="background:#ffff00"></i><span style="float: left;">&nbsp;10 cm &ndash; 70 cm</span><span class="count countState2"></span></div><div style="clear:both;"><i class="color" style="background:#a0a9f7"></i><span style="float: left;">&nbsp;'+layernames.floodheights.tentative_areas+'</span><span class="count countState1"></span></div></div>';
 
 //flood gauges legend
 var siagaNames = {};
@@ -778,11 +778,11 @@ else {
 		siagaNames[3] = 'Alert Level 3';
 		siagaNames[4] = 'Alert Level 4';
 }
-var gaugesLegend = '<div id="gaugesLegend"><div class="sublegend"><div style="font-weight:bold">'+layernames.floodgauges+'</div><div><img src="/banjir/img/floodgauge_1.svg" height="18px;" width="auto" /><span>&nbsp;'+siagaNames[1]+'</span></div><div><img src="/banjir/img/floodgauge_2.svg" height="18px;" width="auto" /><span>&nbsp;'+siagaNames[2]+'</span></div><div><img src="/banjir/img/floodgauge_3.svg" height="18px;" width="auto" /><span>&nbsp;'+siagaNames[3]+'</span></div><div><img src="/banjir/img/floodgauge.svg" height="18px;" width="auto" /><span>&nbsp;'+siagaNames[4]+'</span></div></div>';
+var gaugesLegend = '<div id="gaugesLegend" style="clear: both;"><div class="sublegend"><div style="font-weight:bold">'+layernames.floodgauges+'</div><div><img src="/banjir/img/floodgauge_1.png" height="18px;" width="auto" /><span>&nbsp;'+siagaNames[1]+'</span></div><div><img src="/banjir/img/floodgauge_2.png" height="18px;" width="auto" /><span>&nbsp;'+siagaNames[2]+'</span></div><div><img src="/banjir/img/floodgauge_3.png" height="18px;" width="auto" /><span>&nbsp;'+siagaNames[3]+'</span></div><div><img src="/banjir/img/floodgauge.png" height="18px;" width="auto" /><span>&nbsp;'+siagaNames[4]+'</span></div></div>';
 
 //infrastructure legend items
-var pumpsLegend = '<div id="pumpsLegend"><div class="sublegend"><div><img src="/banjir/img/pump.svg" height="18px;" width="auto" /><span>&nbsp;'+layernames.pumps+'</span></div></div>';
-var floodgatesLegend =  '<div id="floodgatesLegend"><div class="sublegend"><div><img src="/banjir/img/floodgate.svg" height="18px;" width="auto" /><span>&nbsp;'+layernames.floodgates+'</span></div></div>';
+var pumpsLegend = '<div id="pumpsLegend"><div class="sublegend"><div><img src="/banjir/img/pump.png" height="18px;" width="auto" /><span>&nbsp;'+layernames.pumps+'</span></div></div>';
+var floodgatesLegend =  '<div id="floodgatesLegend"><div class="sublegend"><div><img src="/banjir/img/floodgate.png" height="18px;" width="auto" /><span>&nbsp;'+layernames.floodgates+'</span></div></div>';
 var waterwaysLegend = '<div id="waterwaysLegend"><div class="sublegend"><div><span style="background-color:#3960ac; font-size:6px;padding-top:8px;margin-left:8px;margin-right:5px;">&nbsp;</span><span>&nbsp;'+layernames.waterways+'</span></div></div>';
 
 
