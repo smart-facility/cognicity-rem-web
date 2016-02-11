@@ -45,7 +45,20 @@ body {
 #table {
     height: 30%;
     background-color: #eee;
+    position: relative;
+}
+
+#table #data-table-wrapper {
     overflow: auto;
+	position: absolute;
+	bottom: 0px;
+	left: 0px;
+	right: 0px;
+	top: 22px;
+}
+
+#table #data-table {
+	
 }
 
 #table table .header {
