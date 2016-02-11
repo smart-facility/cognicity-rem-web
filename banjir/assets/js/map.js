@@ -1086,7 +1086,7 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 				dimsStateText = dimsStatesByPkey[filtered.features[x].properties.pkey];
 			}
 			rw_html += "<tr id='table_rw_" + filtered.features[x].properties.pkey + "' data-pkey='" + filtered.features[x].properties.pkey + "' class='rw table_village_" + levelNameToId(filtered.features[x].properties.parent_name) + "' style='display:none;' data-village-name='" + filtered.features[x].properties.parent_name + "'>";
-			rw_html += "<td></td>";
+			rw_html += "<td>&nbsp;</td>";
 			rw_html += "<td>" + filtered.features[x].properties.pkey + "</td>";
 			rw_html += "<td>"+filtered.features[x].properties.level_name+"</td>";
 			rw_html += "<td>" + filtered.features[x].properties.pt_count + "</td>";
@@ -1101,6 +1101,8 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 				rw_html += "<option value='3'>71&ndash;150cm</option>";
 				rw_html += "<option value='4'>151cm +</option>";
 				rw_html += "</select>";
+			} else {
+				rw_html += " ";
 			}
 			rw_html += "</td>";
 			rw_html += "</tr>";
@@ -1116,9 +1118,8 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 		else {
 			html += "<td>" + outlines.features[i].properties.pt_count+ "</td>";
 		}
-		html += "<td></td>";
-		html += "<td></td>";
-		html += "<td></td>";
+		html += "<td>&nbsp;</td>";
+		html += "<td>&nbsp;</td>";
 		html += "</tr>";
 		html += rw_html;
 
