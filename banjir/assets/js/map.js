@@ -549,7 +549,7 @@ var selectedItem;
  */
 function selectItem(layer) {
 	// Remove all highlights
-	$("#table tr.highlighted").removeClass('highlighted');
+	$("#table-data tr.highlighted").removeClass('highlighted');
 
 	// If an item is already selected, cancel selection mode
 	if ( selectedItem ) {
@@ -571,13 +571,17 @@ function selectItem(layer) {
 	}
 }
 
+/**
+ * Stop 'selected item' mode and return to highlighting what's
+ * under the mouse cursor as it moves over the map or table.
+ */
 function deselectItem() {
 	if ( selectedItem ) {
 		// Set selected state to off and update the layer rendering
 		selectedItem.feature.properties.selected = false;
 		updateOutline(selectedItem);
 		// Remove highlight from the table
-		$('#table tr.selected').removeClass('selected');
+		$('#table-data tr.selected').removeClass('selected');
 		// Remember we don't have a selection
 		selectedItem = null;
 	}
@@ -667,7 +671,7 @@ function highlightTableRow(layerElement) {
 	// If we have an active highlight, remove the highlight from the table row
 	if ( activeAggregates ) {
 		$.each( activeAggregates, function(i, activeAggregate) {
-			//$('#table_village_'+levelNameToId(activeAggregate.feature.properties.parent_name)).removeClass('highlighted');
+			//$('#table-area_village_'+levelNameToId(activeAggregate.feature.properties.parent_name)).removeClass('highlighted');
 			activeAggregate.row_rw.removeClass('highlighted');
 			activeAggregate.row_village.removeClass('highlighted');
 		});
@@ -680,9 +684,9 @@ function highlightTableRow(layerElement) {
 
 	// Scroll the table view to the highlighted item
 	var rowTop = $('#table_village_'+row).offset().top;
-	var $table = $("#table");
-	var tableTop = $table.offset().top;
-	$table.scrollTop( $table.scrollTop()  + rowTop - tableTop);
+	var $tableArea = $("#table-container");
+	var tableTop = $tableArea.offset().top;
+	$tableArea.scrollTop( $tableArea.scrollTop()  + rowTop - tableTop);
 
 }
 
@@ -1030,11 +1034,11 @@ map.on('popupopen', function(popup){
 });
 
 /**
- * TODO
+ * Update the counts of REM states for the neighbourhoods in the legend
  */
 function updateRWCounts() {
 	var remStateCounts = [0,0,0,0,0];
-	$("#table tr[id^=table_rw_]").each( function(i) {
+	$("#table-data tr[id^=table_rw_]").each( function(i) {
 		var $row = $(this);
 		var layer = $row.data('layer');
 		var state = layer.feature.properties.state;
@@ -1124,7 +1128,7 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 		html += rw_html;
 
 	}
-	$("#table table tbody").append( html );
+	$("#table-data tbody").append( html );
 
 	// Build lookup table of outline layers by pkey
 	var outlineLayers = {};
@@ -1133,21 +1137,21 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 	});
 
 	// Store references to layers with each row
-	$("#table tr[id^=table_rw_]").each( function(i) {
+	$("#table-data tr[id^=table_rw_]").each( function(i) {
 		var $row = $(this);
 		var rowPkey = $row.data('pkey');
 		$row.data( 'layer', outlineLayers[rowPkey] );
 		outlineLayers[rowPkey].row_rw = $row;
-		outlineLayers[rowPkey].row_village = $( "#table tr#table_village_" + levelNameToId($row.data('village-name')) );
+		outlineLayers[rowPkey].row_village = $( "#table-data tr#table_village_" + levelNameToId($row.data('village-name')) );
 		$row.data( 'villageRow', outlineLayers[rowPkey].row_village );
 		updateFloodedOutlineLayer($row);
 	});
 
 	// When hovering over a table row, highlight the row and the corresponding layer
-	$("#table tr[id^=table_rw_]").on('mouseover', function() {
+	$("#table-data tr[id^=table_rw_]").on('mouseover', function() {
 		if (!selectedItem) {
 			// Remove all highlights
-			$("#table tr.highlighted").removeClass('highlighted');
+			$("#table-data tr.highlighted").removeClass('highlighted');
 			var layer = $(this).data('layer');
 			if (!layer || !layer._map) {
 				// TODO This probably should not occur. Verify that it shouldn't happen and either
@@ -1161,7 +1165,7 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 	}).on('mouseout', function() {
 		if (!selectedItem) {
 			// Remove all highlights
-			$("#table tr.highlighted").removeClass('highlighted');
+			$("#table-data tr.highlighted").removeClass('highlighted');
 		}
 	}).on('click', function(e) {
 		// Ignore click events from the select control
@@ -1172,19 +1176,19 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 
 	// Store list of RW layers with each Village row
 	var rwLayers;
-	$("#table tr[id^=table_village_]").each( function(i) {
+	$("#table-data tr[id^=table_village_]").each( function(i) {
 		var levelNameId = levelNameToId($(this).data('level_name'));
 		rwLayers = [];
-		$( "#table tr.table_village_"+levelNameId ).each( function(i) {
+		$( "#table-data tr.table_village_"+levelNameId ).each( function(i) {
 			rwLayers.push( $(this).data('layer') );
 		});
 		$(this).data('rwLayers', rwLayers);
 	});
 
-	$("#table tr[id^=table_village_]").on('mouseover', function() {
+	$("#table-data tr[id^=table_village_]").on('mouseover', function() {
 		if (!selectedItem) {
 			// Remove all highlights
-			$("#table tr.highlighted").removeClass('highlighted');
+			$("#table-data tr.highlighted").removeClass('highlighted');
 
 			var $row = $(this);
 			highlightOutlineLayers( $row.data('rwLayers') );
@@ -1193,7 +1197,7 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 	}).on('mouseout', function() {
 		if (!selectedItem) {
 			// Remove all highlights
-			$("#table tr.highlighted").removeClass('highlighted');
+			$("#table-data tr.highlighted").removeClass('highlighted');
 		}
 	}).on('click', function(e) {
 		if ( $(e.target).prop("tagName") !== 'A' && $(e.target).prop("tagName") !== 'SPAN' ) {
@@ -1214,7 +1218,7 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 		}
 	});
 
-	$("#table tr[id^=table_village_]").on('expand', function() {
+	$("#table-data tr[id^=table_village_]").on('expand', function() {
 		var $villageRow = $(this);
 		var $toggleButton = $villageRow.find('.village-toggle');
 		var villageClass = '.' + $villageRow.attr('id');
@@ -1232,7 +1236,7 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 	
 	// Wire 'collapse all' button action
 	$(".collapse-all").on('click', function() {
-		$("#table tr[id^=table_village_].expanded").trigger('collapse');
+		$("#table-data tr[id^=table_village_].expanded").trigger('collapse');
 	});
 
 	// Change the flooded state of the row

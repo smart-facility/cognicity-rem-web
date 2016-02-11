@@ -42,13 +42,13 @@ body {
   cursor: default;
 }
 
-#table {
+#table-area {
     height: 30%;
     background-color: #eee;
     position: relative;
 }
 
-#table #data-table-wrapper {
+#table-area #table-container {
     overflow: auto;
 	position: absolute;
 	bottom: 0px;
@@ -57,47 +57,43 @@ body {
 	top: 22px;
 }
 
-#table #data-table {
-	
-}
-
-#table table .header {
+#table-area #table-header .header {
     background-color: #eee;
     font-size: 14px;
 }
 
-#table table .village-toggle {
+#table-area #table-data .village-toggle {
     cursor: pointer;
     padding-left: 10px;
     font-size: 10px;
 }
 
-#table table tr.highlighted {
+#table-area #table-data tr.highlighted {
     background-color: #f88;
 }
 
-#table table tr.selected {
+#table-area #table-data tr.selected {
     background-color: #88f;
 }
 
-#table table .village {
+#table-area #table-data .village {
     background-color: #fff;
     font-size: 14px;
 }
 
-#table table tr.village.highlighted {
+#table-area #table-data tr.village.highlighted {
     background-color: #fcc;
 }
 
-#table table tr.village.selected {
+#table-area #table-data tr.village.selected {
     background-color: #ccf;
 }
 
-#table table .village .flooded-state {
+#table-area #table-data .village .flooded-state {
     font-size: 12px;
 }
 
-#table table .rw {
+#table-area #table-data .rw {
     background-color: #fff;
     font-size: 12px;
 }
