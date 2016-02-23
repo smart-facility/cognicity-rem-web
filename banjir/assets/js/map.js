@@ -1276,3 +1276,83 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 }
 // Finally, add the legend
 mapLegend.addTo(map);
+
+/**
+ Setup table resizing
+*/
+// Add 'disableSelection' and 'enableSelection' to jQuery
+// These are used to prevent selecting text all over the page when using the dragbar
+(function($){
+    $.fn.disableSelection = function() {
+        return this
+                 .attr('unselectable', 'on')
+                 .css('user-select', 'none')
+                 .on('selectstart', false);
+    };
+    $.fn.enableSelection = function() {
+        return this
+                 .attr('unselectable', 'off')
+                 .css('user-select', 'all')
+                 .on('selectstart', true);
+    };
+})(jQuery);
+
+$( function() {
+	// Setup the variables we need for table resizing
+	var tableDragging = false;
+	var dragbarHeight = $(".dragger").height();
+	var navbarHeight = $(".navbar").height();
+	var mapMinHeight = 370; // Large enough to contain the legend with all items on, and the current region box
+	var tableMinHeight = dragbarHeight + navbarHeight + $("#table-header").height();
+
+	// Called when we want to enable 'drag' mode
+	function enableDrag() {
+		tableDragging = true;
+		$("body").disableSelection();
+	}
+
+	// Called to disable drag mode
+	function disableDrag() {
+	    tableDragging = false;
+		$("body").enableSelection();
+		$(window).trigger("resize");
+		map.invalidateSize();
+	}
+
+	// While dragging, resize the table to provide visual feedback to the user.
+	// Don't bother doing a proper page resize until the user releases the mouse, as this will mean a map
+	// resize and can be expensive.
+	function resizeTable(e) {
+	    var mapHeight = e.clientY - navbarHeight;
+	    if (mapHeight<mapMinHeight) mapHeight = mapMinHeight;
+	    if (mapHeight>$( window ).height()-tableMinHeight) mapHeight = $( window ).height()-tableMinHeight;
+	    var tableHeight = $( window ).height() - mapHeight - navbarHeight - dragbarHeight;
+	    $("#map").height(mapHeight+"px");
+	    $("#table-area").height(tableHeight+"px");
+	}
+
+	// On dragging the drag bar, remember we're in drag mode
+	$(".dragger").on("mousedown", function(){
+		enableDrag();
+	});
+	
+	$("body").on("mousemove", function(e) {
+		// Capture mouse move events on the body as the mouse could be dragging away from the drag bar
+		// - because the resize handling isn't instant and may not keep pace with the mouse
+		if (tableDragging) {
+			resizeTable(e);
+		}
+	}).on("mouseup",function(){
+		// On mouse up or mouse leave, stop drag mode
+		disableDrag();
+	}).on("mouseleave",function(){
+		disableDrag();
+	});
+
+	// At startup, resize the table once - this takes into account the dragbar size and
+	// gits rid of the double scrollbar which appears at first load
+	var fakeEvent = {
+		clientY: $("#table-area").offset().top
+	};
+	resizeTable(fakeEvent);
+});

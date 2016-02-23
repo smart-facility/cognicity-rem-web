@@ -30,7 +30,9 @@
   <body class="{{{site.locale-url-prefix}}}">
 
     <div id="page">
+    
       <div id="header">
+      
         <!-- Fixed navbar -->
         <div class="navbar navbar-default navbar-fixed-top">
           <div class="container">
@@ -49,8 +51,8 @@
                 <li><a href="/{{site.url-prefix}}/{{site.other-locale-url-prefix}}/">[{{{navbar.other-locale}}}]</a></li>
               </ul>
             </div>
-          </div>
-        </div>
+          </div><!-- /.container -->
+        </div><!-- /.navbar -->
 
 
         <!-- Modal -->
@@ -71,6 +73,7 @@
             </div><!-- /.modal-content -->
           </div><!-- /.modal-dialog -->
         </div><!-- /.modal -->
+        
         <!-- Info Modal -->
         <div class="modal fade" id="infoModal" tabindex="-1" role="dialog" aria-labelledby="infoModal" aria-hidden="true" style="height:500px;">
           <div class="modal-dialog">
@@ -90,9 +93,15 @@
             </div><!-- /.modal-content -->
           </div><!-- /.modal-dialog -->
         </div><!-- /.modal -->
-      </div>
+        
+      </div><!-- /#header -->
+      
       <div id="content">
+      
         <div id="map"></div>
+        
+        <div class="dragger" style="width: 100%; background-color: rgb(204, 204, 204); cursor: ns-resize; height: 3px;"></div>
+        
         <div id="table-area">
           <table id="table-header" width="100%">
               <thead>
@@ -122,9 +131,11 @@
 		      </tbody>
 		    </table>
 		  </div>
-        </div>
-      </div>
-    </div>
+        </div><!-- /#table-area -->
+        
+      </div><!-- /#content -->
+      
+    </div><!-- /#page -->
 
   <!-- Site JavaScript -->
   <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
