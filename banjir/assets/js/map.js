@@ -239,7 +239,9 @@ var getReport = function(id) {
 
 var aggregateHours = 1;
 // TODO Edit mode temporary fix
-var editMode = true;
+var editMode = false;
+var adminMode = false;
+var username = "";
 
 /**
 	Get GeoJSON representing counts of reports in RW polygons
@@ -249,11 +251,31 @@ var editMode = true;
 var getAggregates = function(level) {
 	return new RSVP.Promise(function(resolve, reject) {
 		jQuery.getJSON('/banjir/data/api/v2/aggregates/live?format=topojson&level='+level+'&hours='+aggregateHours, function(data, textStatus, jqXHR) {
-			// TODO Edit mode temporary fix
-			if ( jqXHR.getResponseHeader('REM-editor') === 'false' ) {
-				editMode = false;
-			}
 			resolve(topojson.feature(data, data.objects.collection));
+		});
+	});
+};
+
+/**
+ Fetch logged in user information from server.
+ Update UI in response to user information.
+*/
+var getUserInformation = function() {
+	return new RSVP.Promise(function(resolve, reject) {
+		jQuery.getJSON('/currentUser', function(data, textStatus, jqXHR) {
+			// Store user roles locally
+			if ( data.editor ) {
+				editMode = true;
+			}
+			if ( data.admin ) {
+				adminMode = true;
+				// TODO Link to user maintenance?
+			}
+			
+			// Set username in user control
+			$("#usermenu .username").text( data.username );
+			
+			resolve();
 		});
 	});
 };
@@ -958,7 +980,7 @@ var loadSecondaryLayers = function(layerControl) {
 $(function() {
 	map.spin(true);
 	window.layerControl = L.control.layers({}, {}, {position: 'bottomleft'}).addTo(map);
-	loadPrimaryLayers(window.layerControl).then(loadSecondaryLayers);
+	getUserInformation().then(loadPrimaryLayers(window.layerControl)).then(loadSecondaryLayers);
 
 	// Always show info box
 	info.addTo(map);

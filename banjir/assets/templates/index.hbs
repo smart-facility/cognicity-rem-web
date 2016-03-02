@@ -49,6 +49,15 @@
               <ul class="nav navbar-nav navbar-right">
                 <li class="active"><a href="/{{site.url-prefix}}/{{site.locale-url-prefix}}/">{{{navbar.rem}}}</a></li>
                 <li><a href="/{{site.url-prefix}}/{{site.other-locale-url-prefix}}/">[{{{navbar.other-locale}}}]</a></li>
+                <li id="usermenu">
+                	<button class="btn btn-default dropdown-toggle" type="button" id="userDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                		<span class="glyphicon glyphicon-user"></span><span class="username">(loading)</span>
+                		<span class="caret"></span>
+                	</button>
+                	<ul class="dropdown-menu" aria-labelledby="userDropdown">
+					    <li><a href="/logout">Logout</a></li>
+				  	</ul>
+                </li>
               </ul>
             </div>
           </div><!-- /.container -->
