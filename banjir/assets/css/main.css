@@ -489,3 +489,13 @@ a:after {
     top: -50px;
     visibility: hidden;
 }
+
+#userDropdown {
+    margin: 8px 0 0 4px;
+    font-size: 12px;
+}
+
+#userDropdown .username {
+    padding-left: 8px;
+    padding-right: 8px;
+}
