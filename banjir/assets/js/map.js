@@ -1118,9 +1118,8 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 			rw_html += "<td>" + filtered.features[x].properties.pt_count + "</td>";
 			rw_html += "<td class='dimsStatus'>" + dimsStateText + "</td>";
 			rw_html += "<td>";
-			// TODO Edit mode temporary fix
 			if (editMode) {
-				rw_html += "<select class='flooded-state'>";
+				rw_html += "<select class='flooded-state' autocomplete='off'>";
 				rw_html += "<option value='0'></option>";
 				rw_html += "<option value='1'>" + layernames.floodheights.tentative_areas + "</option>";
 				rw_html += "<option value='2'>10&ndash;70cm</option>";
@@ -1158,14 +1157,16 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 		outlineLayers[layer.feature.properties.pkey] = layer;
 	});
 
-	// Store references to layers with each row
+	// For every RW row:
 	$("#table-data tr[id^=table_rw_]").each( function(i) {
 		var $row = $(this);
 		var rowPkey = $row.data('pkey');
+		// Store references to layers with each row
 		$row.data( 'layer', outlineLayers[rowPkey] );
 		outlineLayers[rowPkey].row_rw = $row;
 		outlineLayers[rowPkey].row_village = $( "#table-data tr#table_village_" + levelNameToId($row.data('village-name')) );
 		$row.data( 'villageRow', outlineLayers[rowPkey].row_village );
+		// Set initial state of select control
 		updateFloodedOutlineLayer($row);
 	});
 
@@ -1276,7 +1277,12 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 		var layer = $row.data('layer');
 		var $select = $('.flooded-state', $row);
 
-		if ( $select.val() !== layer.feature.properties.state ) {
+		var featureState = layer.feature.properties.state;
+		if (featureState === null) {
+			featureState = 0;
+		}
+		
+		if ( $select.val() !== featureState ) {
 			$select.val(layer.feature.properties.state);
 		}
 
