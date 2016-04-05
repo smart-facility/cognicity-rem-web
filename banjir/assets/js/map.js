@@ -238,9 +238,9 @@ var getReport = function(id) {
 };
 
 var aggregateHours = 1;
-// TODO Edit mode temporary fix
+
 var editMode = false;
-var adminMode = false;
+var adminMode = false; // Note, this is currently not used
 var username = "";
 
 /**
@@ -269,7 +269,6 @@ var getUserInformation = function() {
 			}
 			if ( data.admin ) {
 				adminMode = true;
-				// TODO Link to user maintenance?
 			}
 			
 			// Set username in user control

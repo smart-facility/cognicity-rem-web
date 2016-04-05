@@ -1,8 +1,6 @@
 petajakarta.org/banjir
 ======================
 
-Travis build status: [![Travis Build Status](https://travis-ci.org/smart-facility/petajakarta-web.svg)](https://travis-ci.org/smart-facility/petajakarta-web)
-
 **petajakarta.org/banjir** is an open source, community-led platform to collect and disseminate information about flooding and critical water infrastructure in Jakarta.
 
 The platform runs on the open source software known as [CogniCity](http://cognicity.info/). This GeoSocial Intelligence framework allows data to be collected and disseminated by community members through their location-enabled mobile devices to map information about flooding and water infrastructure in real-time.
@@ -16,7 +14,7 @@ We use [Grunt](http://gruntjs.com/) with various third-party tasks to work with 
 From the command line:
 
 1. Install `grunt-cli` globally with `npm install -g grunt-cli`.
-2. Navigate to the root `/petajakarta-web` directory, then run `npm install`. npm will look at [package.json](https://github.com/twbs/bootstrap/blob/master/package.json) and automatically install the necessary local dependencies listed there.
+2. Navigate to the root `/cognicity-rem-web` directory, then run `npm install`. npm will look at [package.json](https://github.com/twbs/bootstrap/blob/master/package.json) and automatically install the necessary local dependencies listed there.
 
 When completed, you'll be able to run the various Grunt commands provided from the command line.
 

@@ -3,6 +3,7 @@
 	 * @param {number} param Parameter to validate
 	 * @param {number=} min Minimum value parameter can have and be valid
 	 * @param {number=} max Maximum value parameter can have and be valid
+	 * @return {boolean} True if the number met the validation requirements
 	 */
 	var validateNumberParameter = function(param, min, max) {
 		var valid = true;
