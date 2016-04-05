@@ -894,16 +894,6 @@ var markerMap = {}; //Reference list of markers stored outside of Leaflet
  */
 var loadPrimaryLayers = function(layerControl) {
 	// Load confirmed reports and both village and rw outlines.
-//	var layerPromises = {
-//		confirmed: getReports('confirmed')
-//			.then(loadConfirmedPoints),
-//		outlines: getAggregates('village')
-//			.then(function(village) {
-//				return getAggregates('rw').then( function(rw) {
-//					return loadOutlines(village, rw);
-//				});
-//			})
-//	};
 	var layerPromises = {
 			confirmed: getReports('confirmed')
 				.then(loadConfirmedPoints),
@@ -952,15 +942,6 @@ var loadSecondaryLayers = function(layerControl) {
 				.then(function(floodgauges){
 					return loadInfrastructure('floodgauges', floodgauges);
 				})
-			// TODO These were already fetched for the primary layers can we cache the data for this call?
-			/*village: getAggregates('village')
-				.then(function(aggregates) {
-					return loadAggregates('village', aggregates);
-				}),
-			rw: getAggregates('rw')
-				.then(function(aggregates) {
-					return loadAggregates('rw', aggregates);
-				})*/
 		};
 
 		RSVP.hash(secondaryPromises).then(function(overlays) {
