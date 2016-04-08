@@ -644,7 +644,8 @@ function highlightOutlineLayer(layerElement) {
 	});
 
 	// Update the tooltip
-	info.update(layerElement.feature.properties);
+	var infoText = layerElement.feature.properties.parent_name + ', ' + layerElement.feature.properties.level_name;
+	info.update(infoText);
 
 	// Retain which layer is highlighted
 	activeAggregates = [layerElement];
@@ -670,8 +671,7 @@ function highlightOutlineLayers(layerElements) {
 	});
 
 	// Update the tooltip
-	// TODO
-	//info.update(layerElement.feature.properties);
+	info.update(layerElements[0].feature.properties.parent_name);
 
 	activeAggregates = layerElements;
 }
@@ -836,8 +836,14 @@ else {
 	reports_text = 'reports';
 }
 
-info.update = function(properties){
-		this._div.innerHTML = (properties ? properties.parent_name+', '+properties.level_name : hover_text);
+/**
+ * Update the info control.
+ * If no text is supplied, show the placeholder text.
+ * @param {string=} text (optional) The text to show in the info control.
+ */
+info.update = function(text) {
+	if (!text) text = hover_text;
+	this._div.innerHTML = text;
 };
 
 var reportsControl = L.control({position:'bottomleft'});
