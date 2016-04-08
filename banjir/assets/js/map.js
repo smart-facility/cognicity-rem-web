@@ -614,7 +614,7 @@ Visual highlighting of polygon when hovered over with the mouse
 @param {object} event - leaflet event object
 */
 function highlightOutline(e) {
-	if (!selectedItem) {
+	if (!selectedItem && !tableDragging) {
 		var layer = e.target;
 
 		highlightTableRow( layer );
@@ -1311,9 +1311,9 @@ mapLegend.addTo(map);
     };
 })(jQuery);
 
+var tableDragging = false;
 $( function() {
 	// Setup the variables we need for table resizing
-	var tableDragging = false;
 	var dragbarHeight = $(".dragger").height();
 	var navbarHeight = $(".navbar").height();
 	var mapMinHeight = 370; // Large enough to contain the legend with all items on, and the current region box
