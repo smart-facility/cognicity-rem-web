@@ -136,12 +136,16 @@ module.exports = function(grunt) {
           destination: 'docs'
         }
       }
+    },
+    clean: {
+    	build: ['build/*']
     }
   });
 
   // Load the plugin that provides the "uglify" task.
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-jshint');
+  grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-cssmin');
   grunt.loadNpmTasks('grunt-contrib-copy');
@@ -154,8 +158,8 @@ module.exports = function(grunt) {
   // Tasks
   grunt.registerTask('assets', ['jshint', 'concat:js', 'uglify:build', 'concat:css', 'cssmin:build', 'copy:images']);
   grunt.registerTask('site', ['staticHandlebars:en', 'staticHandlebars:in', 'staticHandlebars:id']);
-  grunt.registerTask('server', ['assets', 'site', 'concurrent:server']);
-  grunt.registerTask('default', ['assets', 'site']);
+  grunt.registerTask('server', ['clean', 'assets', 'site', 'concurrent:server']);
+  grunt.registerTask('default', ['clean', 'assets', 'site']);
   grunt.registerTask('docs', ['jsdoc:dist']);
   grunt.registerTask('dev', ['copy:devjs']);
 
