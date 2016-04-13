@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports = function(grunt) {
 
   // Project configuration.
@@ -154,7 +156,7 @@ module.exports = function(grunt) {
   grunt.registerTask('site', ['staticHandlebars:en', 'staticHandlebars:in', 'staticHandlebars:id']);
   grunt.registerTask('server', ['assets', 'site', 'concurrent:server']);
   grunt.registerTask('default', ['assets', 'site']);
-  grunt.registerTask('docs', ['jsdoc:dist'])
-  grunt.registerTask('dev', ['copy:devjs'])
+  grunt.registerTask('docs', ['jsdoc:dist']);
+  grunt.registerTask('dev', ['copy:devjs']);
 
 };
