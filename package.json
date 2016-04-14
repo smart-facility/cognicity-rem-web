@@ -2,7 +2,7 @@
   "name": "petajakarta-web",
   "version": "2.0.0",
   "scripts": {
-    "jshint": "jshint Gruntfile.js",
+    "jshint" : "jshint Gruntfile.js",
     "test": "npm run jshint && grunt"
   },
   "devDependencies": {
