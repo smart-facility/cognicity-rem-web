@@ -75,7 +75,7 @@
               </div>
               <div class="modal-footer">
                 <div class="pull-left"><label><input type="checkbox" autocomplete="off" onclick="toggle_timestamp(this.checked);">{{{confirmed-reports.timestamp}}}</label></div>
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">{{modal.close}}</button>
               </div>
             </div><!-- /.modal-content -->
           </div><!-- /.modal-dialog -->
@@ -94,7 +94,7 @@
               </div>
               <div class="modal-footer">
                 <h5 class="pull-left">PetaJakarta.org &copy; SMART Infrastructure Facility, University of Wollongong</h5>
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">{{modal.close}}</button>
 
               </div>
             </div><!-- /.modal-content -->
@@ -114,11 +114,11 @@
               <thead>
                   <tr class="header">
                       <th width="25"><a class="collapse-all"><span class='glyphicon glyphicon-minus' aria-hidden='true'></span></a></th>
-                      <th width="10%">ID</th>
-                      <th width="30%">Name</th>
-                      <th width="20%">Reports</th>
-                      <th width="10%">DIMS</th>
-                      <th width="*">Actions</th>
+                      <th width="10%">{{state-table.id}}</th>
+                      <th width="30%">{{state-table.name}}</th>
+                      <th width="20%">{{state-table.reports}}</th>
+                      <th width="10%">{{state-table.dims}}</th>
+                      <th width="*">{{state-table.actions}}</th>
                   </tr>
               </thead>
           </table>
