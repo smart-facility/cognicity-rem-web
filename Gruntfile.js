@@ -8,9 +8,9 @@ module.exports = function(grunt) {
     concat: {
       js: {
         src: [
-          'banjir/vendor/js/jquery-1.10.2.min.js',
-          'banjir/vendor/js/bootstrap.min.js',
-          'banjir/vendor/js/leaflet.js',
+          'banjir/vendor/js/jquery-1.10.2.js',
+          'banjir/vendor/js/bootstrap.js',
+          'banjir/vendor/js/leaflet-src.js',
           'banjir/vendor/js/betterWMS.js',
           'banjir/vendor/js/leaflet-providers.js',
           'banjir/vendor/js/L.Control.MousePosition.js',
@@ -22,9 +22,8 @@ module.exports = function(grunt) {
           'banjir/vendor/js/underscore-min.js',
           'banjir/vendor/js/Chart.js',
           'banjir/vendor/js/jquery.growl.js',
-          'banjir/vendor/js/jquery.scrollUp.min.js',
+          'banjir/vendor/js/jquery.scrollUp.js',
           'banjir/vendor/js/url.min.js',
-          'banjir/vendor/js/Chart.min.js',
           'banjir/vendor/js/turf.js',
           'banjir/assets/js/reports.js',
           'banjir/assets/js/validation.js'
