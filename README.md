@@ -1,7 +1,10 @@
-petajakarta.org/banjir
-======================
+CogniCity
+=========
+**Open Source GeoSocial Intelligence Framework**
 
-**petajakarta.org/banjir** is an open source, community-led platform to collect and disseminate information about flooding and critical water infrastructure in Jakarta.
+#### cognicity-rem-web: Frontend web interface for REM server.
+
+[![Build Status](https://smart-analytics.eis.uow.edu.au/Jenkins/buildStatus/icon?job=cognicity-rem-web-test)](https://smart-analytics.eis.uow.edu.au/Jenkins/job/cognicity-rem-web-test/)
 
 The platform runs on the open source software known as [CogniCity](http://cognicity.info/). This GeoSocial Intelligence framework allows data to be collected and disseminated by community members through their location-enabled mobile devices to map information about flooding and water infrastructure in real-time.
 
