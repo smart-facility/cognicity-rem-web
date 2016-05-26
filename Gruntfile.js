@@ -82,6 +82,7 @@ module.exports = function(grunt) {
         files: [
           { expand: true, flatten: true, src: "banjir/assets/img/*", dest: "build/banjir/img/" },
           { expand: true, flatten: true, src: "banjir/vendor/css/images/*", dest: "build/banjir/css/images/" },
+          { expand: true, flatten: true, src: "banjir/assets/fonts/*", dest: "build/banjir/fonts/"},
           { expand: true, flatten: true, src: "banjir/vendor/fonts/*", dest: "build/banjir/fonts/"},
           { expand: true, flatten: true, src: "banjir/robots.txt", dest: "build/"}
         ]
