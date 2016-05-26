@@ -12,9 +12,7 @@ module.exports = function(grunt) {
           'banjir/vendor/js/bootstrap.js',
           'banjir/vendor/js/leaflet-src.js',
           'banjir/vendor/js/betterWMS.js',
-          'banjir/vendor/js/leaflet-providers.js',
           'banjir/vendor/js/L.Control.MousePosition.js',
-          'banjir/vendor/js/leaflet.markercluster.js',
           'banjir/vendor/js/spin.min.js',
           'banjir/vendor/js/leaflet.spin.js',
           'banjir/vendor/js/topojson.js',
@@ -23,7 +21,7 @@ module.exports = function(grunt) {
           'banjir/vendor/js/Chart.js',
           'banjir/vendor/js/jquery.growl.js',
           'banjir/vendor/js/jquery.scrollUp.js',
-          'banjir/vendor/js/url.min.js',
+          'banjir/vendor/js/url.js',
           'banjir/vendor/js/turf.js',
           'banjir/assets/js/reports.js',
           'banjir/assets/js/validation.js'
