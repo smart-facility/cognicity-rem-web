@@ -270,10 +270,10 @@ var getUserInformation = function() {
 			if ( data.admin ) {
 				adminMode = true;
 			}
-			
+
 			// Set username in user control
 			$("#usermenu .username").text( data.username );
-			
+
 			resolve();
 		});
 	});
@@ -966,7 +966,7 @@ var loadSecondaryLayers = function(layerControl) {
 $(function() {
 	map.spin(true);
 	window.layerControl = L.control.layers({}, {}, {position: 'bottomleft'}).addTo(map);
-	getUserInformation().then(loadPrimaryLayers(window.layerControl)).then(loadSecondaryLayers);
+	getUserInformation().then(loadPrimaryLayers(window.layerControl)).then(loadSecondaryLayers(window.layerControl));
 
 	// Always show info box
 	info.addTo(map);
@@ -1242,7 +1242,7 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 		$( villageClass ).hide();
 		$villageRow.removeClass('expanded');
 	});
-	
+
 	// Wire 'collapse all' button action
 	$(".collapse-all").on('click', function() {
 		$("#table-data tr[id^=table_village_].expanded").trigger('collapse');
@@ -1267,7 +1267,7 @@ function populateTable(outlines, outlineLayer, rw, dimsStates) {
 		if (featureState === null) {
 			featureState = 0;
 		}
-		
+
 		if ( $select.val() !== featureState ) {
 			$select.val(layer.feature.properties.state);
 		}
@@ -1349,7 +1349,7 @@ $( function() {
 	$(".dragger").on("mousedown", function(){
 		enableDrag();
 	});
-	
+
 	$("body").on("mousemove", function(e) {
 		// Capture mouse move events on the body as the mouse could be dragging away from the drag bar
 		// - because the resize handling isn't instant and may not keep pace with the mouse
