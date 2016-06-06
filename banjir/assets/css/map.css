@@ -330,6 +330,11 @@ label {
   text-shadow: -2px 0 #00b8e6, 0 2px #00b8e6, 2px 0 #00b8e6, 0 -2px #00b8e6;
 }
 
+.div-icon-gdc {
+  color: white;
+  text-shadow: -2px 0 #FE9A2E, 0 2px #FE9A2E, 2px 0 #FE9A2E, 0 -2px #FE9A2E;
+}
+
 .div-icon-confirmed-legend {
   color: white;
   text-shadow: -1px 0 #00b8e6, 0 1px #00b8e6, 1px 0 #00b8e6, 0 -1px #00b8e6;

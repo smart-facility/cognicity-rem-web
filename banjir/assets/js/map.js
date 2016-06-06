@@ -114,6 +114,26 @@ var markerPopup = function(feature, layer) {
 };
 
 /**
+	Get Geo Data Collect Reports
+
+	@param {string} layer - the layer to be fetched
+	@return {L.TileLayer} layer - the layer that was fetched from the server
+*/
+var getGDC = function() {
+	return new RSVP.Promise(function(resolve, reject){
+		// Use live data
+		jQuery.getJSON("https://gist.githubusercontent.com/talltom/23934ded2d85e5affde3a605dee99452/raw/4b8735b7614c9b795aaee798ffc7532b1e43815d/genangan.json", function(data){
+				if (data.features !== null){
+					console.log(data);
+					resolve(data);
+				} else {
+					resolve(null);
+				}
+		});
+	});
+};
+
+/**
 	Get a map overlay layer from the geoserver
 
 	@param {string} layer - the layer to be fetched
@@ -406,6 +426,48 @@ var loadOutlines = function(village, rw, dimsStates){
 	updateRWCounts();
 
 	return outlineLayer;
+};
+
+/**
+	Plots geo data collect reports on map
+
+	@param {string} layer - string - name of infrastructure layer to load
+	@param {object} reports - a geo data collect json object containing reports
+*/
+
+
+var loadGDC = function(layer, reports){
+	var circles = [];
+	var reportTables = {};
+
+	var _gdcTable = function(report){
+		var table = "<div class='table-responsive'><table class='table table-hover'><thead><tr><th>Item</th><th>Data</th></tr></thead><tbody>";
+		for (var i in report){
+			table += "<tr><td>"+i+"</td><td>"+report[i]+"</td></tr>";
+		}
+		table += "</tbody></table></div>";
+		return table;
+	};
+
+	var _gdcModal = function(table){
+		$('#reportModalContent').empty();
+		$('#reportModalContent').append(table);
+		$('#reportModal').modal('show');
+	};
+
+	for (var i = 0; i < reports.length-1;i++){
+		var icon = L.divIcon({className: 'div-icon-gdc', html:'<p><span class="glyphicon glyphicon-map-marker" aria-hidden="true"></span></p>', popupAnchor:[5,0]});
+		var marker = L.marker([reports[i]._geolocation[0],reports[i]._geolocation[1]], {icon:icon, zIndexOffset: 1000, title:"gdc_report_"+i});
+		reportTables["gdc_report_"+i] = _gdcTable(reports[i]);
+		circles.push(marker);
+	}
+
+	window[layer] = L.featureGroup(circles).addTo(map);
+	window[layer].on('click', function(e){
+		_gdcModal(reportTables[e.layer.options.title]);
+	});
+
+	return window[layer];
 };
 
 /**
@@ -947,6 +1009,10 @@ var loadSecondaryLayers = function(layerControl) {
 			floodgauges: getInfrastructure('floodgauges')
 				.then(function(floodgauges){
 					return loadInfrastructure('floodgauges', floodgauges);
+				}),
+			gdc_reports: getGDC()
+				.then(function(gdc_reports){
+					return loadGDC('gdc_reports', gdc_reports);
 				})
 		};
 
@@ -956,6 +1022,7 @@ var loadSecondaryLayers = function(layerControl) {
 			layerControl.addOverlay(overlays.waterways, layernames.waterways);
 			layerControl.addOverlay(overlays.pumps, layernames.pumps);
 			layerControl.addOverlay(overlays.floodgates, layernames.floodgates);
+			layerControl.addOverlay(overlays.gdc_reports, 'GeoData Collect');
 			showURLReport(); //once point layers loaded zoom to report specified in URL
 
 		});
