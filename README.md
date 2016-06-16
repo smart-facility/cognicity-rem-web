@@ -6,6 +6,9 @@ CogniCity
 
 [![Build Status](https://smart-analytics.eis.uow.edu.au/jenkins/buildStatus/icon?job=cognicity-rem-web-test)](https://smart-analytics.eis.uow.edu.au/jenkins/job/cognicity-rem-web-test/)
 
+DOI for current stable release [v2.0.0](https://github.com/smart-facility/cognicity-rem-web/releases/tag/v2.0.0):
+[![DOI](https://zenodo.org/badge/19201/smart-facility/cognicity-rem-web.svg)](https://zenodo.org/badge/latestdoi/19201/smart-facility/cognicity-rem-web)
+
 The platform runs on the open source software known as [CogniCity](http://cognicity.info/). This GeoSocial Intelligence framework allows data to be collected and disseminated by community members through their location-enabled mobile devices to map information about flooding and water infrastructure in real-time.
 
 ## Compiling the Site
