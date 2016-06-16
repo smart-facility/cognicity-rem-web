@@ -124,12 +124,22 @@ var getGDC = function() {
 		// Use live data
 		jQuery.getJSON("https://gist.githubusercontent.com/talltom/23934ded2d85e5affde3a605dee99452/raw/4b8735b7614c9b795aaee798ffc7532b1e43815d/genangan.json", function(data){
 				if (data.features !== null){
-					console.log(data);
 					resolve(data);
 				} else {
 					resolve(null);
 				}
 		});
+		/*$.ajax({
+		  url: "https://api.ona.io/api/v1/data/117899f",
+			beforeSend: function(xhr){
+				    xhr.setRequestHeader ("Authorization", "Basic " + btoa('tomas' + ":" + 'Pet@Jakarta#$'));
+			},
+			type: "GET",
+			dataType: "json",
+			success: function(data){
+				console.log(data);
+				resolve(data);
+			}});*/
 	});
 };
 
