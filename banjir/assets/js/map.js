@@ -85,7 +85,7 @@ var markerPopup = function(feature, layer) {
 	if (feature.properties) {
 		markerMap[feature.properties.pkey] = layer;
 		// Render as tweet
-		if (feature.properties.source == 'twitter'){
+		if (feature.properties.source == 'grasp'){
 			layer.bindPopup(tweetPopup(feature), {autoPanPadding:([0,140])});
 		}
 		// Render as Detik report
@@ -152,7 +152,7 @@ var getGDC = function() {
 var getInfrastructure = function(layer) {
 	return new RSVP.Promise(function(resolve, reject){
 		// Use live data
-		jQuery.getJSON("https://petajakarta.org/banjir/data/api/v2/infrastructure/"+layer+"?format=topojson", function(data){
+		jQuery.getJSON("https://data.petabencana.id/infrastructure/"+layer+"?format=topojson", function(data){
 				if (data.features !== null){
 					resolve(topojson.feature(data, data.objects.collection));
 				} else {
@@ -236,16 +236,36 @@ var floodgaugeMarker = function(feature, layer){
 var getReports = function(type) {
 	return new RSVP.Promise(function(resolve, reject) {
 		// Use live data
-		jQuery.getJSON('https://petajakarta.org/banjir/data/api/v2/reports/'+type+'?format=topojson', function(data) {
-			if (data.features !== null){
-				//Convert topojson back to geojson for Leaflet
-				resolve(topojson.feature(data, data.objects.collection));
-			} else {
-				resolve(null);
-			}
+		jQuery.getJSON('https://data.petabencana.id/reports?city=jbd', function(data) {
+			var topoJson = data.result;
+			var geojson = topojson.feature(topoJson, topoJson.objects.output);
+			resolve(geojson);
 		});
 	});
 };
+
+
+/*getData(url) {
+	return new Promise(function(resolve, reject) {
+		client.get(url)
+		.then(data => {
+			var topology = JSON.parse(data.response);
+			if(topology.statusCode === 200) {
+				var topoJson = topology.result;
+				if(topoJson && topoJson.objects !== null) {
+					resolve(topojson.feature(topoJson, topoJson.objects.output));
+				} else {
+					resolve(null);
+				}
+			} else {
+				resolve(null);
+			}
+		})
+		.catch((err) => {
+			reject(err);
+		});
+	})
+}*/
 
 /**
 	Get TopoJSON representing a single confirmed flooding report
@@ -256,7 +276,7 @@ var getReports = function(type) {
 */
 var getReport = function(id) {
 	return new RSVP.Promise(function(resolve, reject){
-		jQuery.getJSON('https://petajakarta.org/banjir/data/api/v2/reports/confirmed/'+id+'?format=geojson', function(data){
+		jQuery.getJSON('https://data.petabencana.id/reports/'+id+'?geoformat=geojson', function(data){
 			if (data.features !== null){
 				resolve(data);
 			}
@@ -986,14 +1006,13 @@ var loadPrimaryLayers = function(layerControl) {
 			// add confirmed points to the map
 			overlays.confirmed.addTo(map);
 			layerControl.addBaseLayer(overlays.confirmed, layernames.confirmed);
-
 			// use turf for a point in polygon count operations
 			var counted_rw = turf.count(overlays.rw, window.confirmedPoints_geojson, 'pt_count');
 			var counted_village = turf.count(overlays.village, window.confirmedPoints_geojson, 'pt_count');
 			// add outlines to map, and pass for table population
 			outlines = loadOutlines(counted_village, counted_rw, overlays.states);
 			outlines.addTo(map);
-
+			console.log('Data loading complete');
 			map.spin(false);
 
 			resolve(layerControl);
@@ -1019,11 +1038,11 @@ var loadSecondaryLayers = function(layerControl) {
 			floodgauges: getInfrastructure('floodgauges')
 				.then(function(floodgauges){
 					return loadInfrastructure('floodgauges', floodgauges);
-				}),
-			gdc_reports: getGDC()
+				})
+			/*gdc_reports: getGDC()
 				.then(function(gdc_reports){
 					return loadGDC('gdc_reports', gdc_reports);
-				})
+				})*/
 		};
 
 		RSVP.hash(secondaryPromises).then(function(overlays) {
